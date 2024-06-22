@@ -1,0 +1,12 @@
+﻿@import "~bootstrap/dist/css/bootstrap.css";
+:root {
+    font-size: 14px;
+}
+
+div#date_panel.p-datepicker-panel.p-component {
+    min-width: fit-content !important;
+}
+
+.flex-auto {
+    flex: auto;
+}
