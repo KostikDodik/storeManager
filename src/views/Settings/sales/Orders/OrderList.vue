@@ -6,6 +6,8 @@ import {useOrdersStore} from "@/stores/orders";
 import {ISalePlatform} from "@/types/ISalePlatform";
 import {IOrder, stateDisplayName, stateOptions} from "@/types/IOrder";
 import {useRouter} from "vue-router";
+import {useViewModel} from "@/stores/viewModel";
+import {DataTablePageEvent} from "primevue/datatable";
 
 interface IDisplayOrder extends IOrder {
     salePlatform?: ISalePlatform;
@@ -14,6 +16,7 @@ interface IDisplayOrder extends IOrder {
 
 const salePlatformStore = useSalePlatformsStore();
 const orderStore = useOrdersStore();
+const viewModel = useViewModel();
 const router = useRouter();
 
 const orders = computed(() => orderStore.orders);
@@ -54,6 +57,10 @@ const addOrder = (data?: IOrder) => {
     });
 };
 
+const pageChanged = (event: DataTablePageEvent) => {
+    viewModel.orderListCurrentPage = event.page;
+}
+
 onBeforeMount(() => {
     salePlatformStore.init();
     orderStore.init().then(() => loading.value = false);
@@ -61,8 +68,8 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div class="d-flex justify-content-center flex-auto">
-    <Card class="w-75" rounded>
+  <div class="d-flex justify-content-center flex-auto overflow-y-scroll">
+    <Card class="w-100 h-fit-content m-4" rounded>
       <template #header>
         <h3 class="bg-success-subtle pb-2 ps-3 pt-3">
           Список замовлень:
@@ -84,25 +91,20 @@ onBeforeMount(() => {
             removableSort
             stripedRows
             size="small"
+            :first="10 * viewModel.orderListCurrentPage"
+            @page="pageChanged"
         >
           <template #empty> Не знайдено замовлень</template>
           <template #loading> Завантаження замовлень..</template>
-          <Column field="name" header="Ім'я" >
-            <template #body="{ data }">
-              {{ data.name }}
-            </template>
-            <template #filter="{ filterModel, filterCallback }">
-              <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="d-flex w-100" placeholder="Пошук по імені" />
-            </template>
-          </Column>
-          <Column field="salePlatformId" header="Постачальник" :showFilterMenu="false" headerStyle="width: 15em" sortable>
+          <Column field="salePlatformId" header="Торгова платформа" :showFilterMenu="false" headerStyle="width: 15em" sortable>
             <template #body="{ data }">
               {{ data.salePlatform?.name }}
             </template>
             <template #filter="{ filterModel, filterCallback }">
               <Select 
                   v-model="filterModel.value" 
-                  editable :options="salePlatforms" 
+                  filter
+                  :options="salePlatforms" 
                   optionLabel="name" optionValue="id" 
                   @change="filterCallback()" 
                   placeholder="Торгова платформа" 
@@ -110,6 +112,7 @@ onBeforeMount(() => {
               />
             </template>
           </Column>
+          <Column field="number" header="П/н" headerStyle="width: 4em"></Column>
           <Column field="date" header="Дата формування" :showFilterMenu="false" headerStyle="width: 11em" sortable>
             <template #body="{ data }">
               {{ data.date.toUaString() }}
@@ -137,21 +140,7 @@ onBeforeMount(() => {
                   placeholder="Статус" 
                   class="d-flex w-100"
               />
-            </template>
-            
-          </Column>
-          <Column field="updatedState" header="Оновлено статус" :showFilterMenu="false" headerStyle="width: 11em" sortable>
-            <template #body="{ data }">
-              {{ data.updatedState.toUaString() }}
-            </template>
-            <template #filter="{ filterModel, filterCallback }">
-              <DatePicker
-                  v-model="filterModel.value"
-                  dateFormat="dd/mm/yy"
-                  class="d-flex w-100"
-                  @update:modelValue="filterCallback()"
-              />
-            </template>
+            </template>            
           </Column>
           <Column field="totalCheck" header="Сума" headerStyle="width: 6rem">
             <template #body="{ data }">
@@ -163,7 +152,7 @@ onBeforeMount(() => {
               {{ Number(data.totalIncome ?? 0).toFixed(2) }}
             </template>
           </Column>
-          <Column headerStyle="width: 8rem" header="Дії">
+          <Column headerStyle="width: 0;" header="Дії">
             <template #body="slotProps">
               <div class="d-flex w-100 justify-content-between">
                 <Button type="button" icon="fa fa-edit" rounded severity="warn" @click="() => editClick(slotProps.data)"/>

@@ -7,6 +7,7 @@
   salePlatformId: string;
   totalSum: number;
   totalIncome: number;
+  number: number;
   state: ItemState;
   rows: IOrderRow[];
 }

@@ -10,3 +10,11 @@ div#date_panel.p-datepicker-panel.p-component {
 .flex-auto {
     flex: auto;
 }
+
+body {
+    height: 100vh;
+}
+
+.h-fit-content {
+    height: fit-content;
+}

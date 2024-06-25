@@ -38,10 +38,16 @@ export interface ISupply {
     id: string;
     name: string;
     supplierId: string;
+    number: number;
     date: Date;
     state: SupplyState;
     trackingNumber: string;
     updatedState: Date;
     deliveryFee: number;
+    totalSum?: number;
+    totalCount?: number;
+    soldCount?: number;
+    soldMoney?: number;
+    totalIncome?: number;
     rows?: ISupplyRow[];
 }

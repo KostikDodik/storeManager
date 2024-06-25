@@ -75,6 +75,8 @@ const onEditSalePlatformClose = (id?: string) => {
     }
 }
 
+const currentSalePlatform = computed(() => salePlatforms.value.find(p => p.id === order.value.salePlatformId)?.name);
+
 onBeforeMount(() => {
     salePlatformStore.init().then(() => salePlatformsLoading.value = false);
     loadOrders();
@@ -83,21 +85,15 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div class="d-flex justify-content-center flex-auto">
-    <Card class="w-75" rounded>
+  <div class="d-flex justify-content-center flex-auto overflow-y-scroll">
+    <Card class="w-100 h-fit-content m-4" rounded>
       <template #header>
         <h3 class="bg-success-subtle pb-2 ps-3 pt-3">
-          {{editMode ? ("Редагувати замовлення " + (order.name ?? "")) : "Створити замовлення" }}
+          {{editMode ? `Редагувати замовлення з платформи ${currentSalePlatform ?? ""} №${order.number}` : "Створити замовлення" }}
         </h3>
       </template>
       <template #content>
-        <form @submit="ok" >
-          <div class="row mb-3">
-            <div class="form-group col-6">
-              <label for="name">Назва</label>
-              <InputText id="name" v-model="order.name" type="text" class="d-flex w-100" placeholder="Назва" />
-            </div>
-          </div>
+        <form @submit="ok" >          
           <div class="row mb-3">
             <div class="form-group col-6">
               <label for="salePlatform">Торгова платформа</label>

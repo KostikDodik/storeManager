@@ -59,8 +59,8 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div class="d-flex justify-content-center flex-auto">
-    <Card class="w-75" rounded>
+  <div class="d-flex justify-content-center flex-auto overflow-y-scroll">
+    <Card class="w-100 h-fit-content m-4" rounded>
       <template #header>
         <h3 class="bg-success-subtle pb-2 ps-3 pt-3">
           Список поставок:
@@ -85,7 +85,6 @@ onBeforeMount(() => {
         >
           <template #empty> Не знайдено поставок</template>
           <template #loading> Завантаження поставок..</template>
-          <Column field="name" header="Ім'я" headerStyle="width: 15em"></Column>
           <Column field="supplierId" header="Постачальник" :showFilterMenu="false" sortable>
             <template #body="{ data }">
               {{ data.supplier?.name }}
@@ -93,7 +92,8 @@ onBeforeMount(() => {
             <template #filter="{ filterModel, filterCallback }">
               <Select 
                   v-model="filterModel.value" 
-                  editable :options="suppliers" 
+                  filter
+                  :options="suppliers" 
                   optionLabel="name" 
                   optionValue="id" 
                   @change="filterCallback()" 
@@ -102,19 +102,7 @@ onBeforeMount(() => {
               />
             </template>
           </Column>
-          <Column field="date" header="Дата формування" :showFilterMenu="false" headerStyle="width: 11em" sortable>
-            <template #body="{ data }">
-              {{ data.date.toUaString() }}
-            </template>
-            <template #filter="{ filterModel, filterCallback }">
-              <DatePicker
-                  v-model="filterModel.value"
-                  dateFormat="dd/mm/yy"
-                  class="d-flex w-100"
-                  @update:modelValue="filterCallback()"
-              />
-            </template>
-          </Column>
+          <Column field="number" header="П/н" headerStyle="width: 4em"></Column>
           <Column field="trackingNumber" header="Номер ТТН" headerStyle="width: 15em"></Column>
           <Column field="state" header="Статус" headerStyle="width: 12rem" :showFilterMenu="false" sortable>
             <template #body="{ data }">
@@ -125,20 +113,11 @@ onBeforeMount(() => {
             </template>
             
           </Column>
-          <Column field="updatedState" header="Оновлено статус" :showFilterMenu="false" headerStyle="width: 11em" sortable>
+          <Column field="totalIncome" header="Дохід" headerStyle="width: 8rem">
             <template #body="{ data }">
-              {{ data.updatedState.toUaString() }}
-            </template>
-            <template #filter="{ filterModel, filterCallback }">
-              <DatePicker
-                  v-model="filterModel.value"
-                  dateFormat="dd/mm/yy"
-                  class="d-flex w-100"
-                  @update:modelValue="filterCallback()"
-              />
+              {{ Number(supplyStore.getSupplyIncome(data)).toFixed(2) }}
             </template>
           </Column>
-          <Column field="deliveryFee" header="Ціна доставки" headerStyle="width: 8rem"></Column>
           <Column headerStyle="width: 8rem" header="Дії">
             <template #body="slotProps">
               <div class="d-flex w-100 justify-content-between">

@@ -74,6 +74,12 @@ const onEditSupplierClose = (id?: string) => {
     }
 }
 
+const totalCount = computed(() => supplyStore.getSupplyCount(supply.value));
+const totalSum = computed(() => supplyStore.getSupplySum(supply.value));
+const totalIncome = computed(() => supplyStore.getSupplyIncome(supply.value));
+
+const currentSupplier = computed(() => suppliers.value.find(s => s.id === supply.value?.supplierId)?.name);
+
 const onDeliveryFeeChanged = () => {
     supplyStore.calculateDeliveryFees(supply.value);
 }
@@ -86,21 +92,15 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div class="d-flex justify-content-center flex-auto">
-    <Card class="w-75" rounded>
+  <div class="d-flex justify-content-center flex-auto overflow-y-scroll">
+    <Card class="w-100 h-fit-content m-4" rounded>
       <template #header>
         <h3 class="bg-success-subtle pb-2 ps-3 pt-3">
-          {{editMode ? ("Редагувати поставку " + (supply.name ?? "")) : "Створити поставку" }}
+          {{editMode ? `Редагувати поставку з ${currentSupplier ?? ""} №${supply.number}` : "Створити поставку"}}
         </h3>
       </template>
       <template #content>
         <form @submit="ok" >
-          <div class="row mb-3">
-            <div class="form-group col-6">
-              <label for="name">Назва поставки</label>
-              <InputText id="name" v-model="supply.name" type="text" class="d-flex w-100" placeholder="Назва поставки" />
-            </div>
-          </div>
           <div class="row mb-3">
             <div class="form-group col-6">
               <label for="supplier">Постачальник</label>
@@ -164,6 +164,42 @@ onBeforeMount(() => {
                   class="d-flex w-100"/>
             </div>
           </div>
+          <Accordion class="mb-3">
+            <AccordionPanel key="settings" value="0">
+              <AccordionHeader class="pb-0">
+                <h3>Статистика</h3>
+              </AccordionHeader>
+              <AccordionContent>
+                <DataTable :value="[supply]">
+                  <Column field="totalCount" header="К-сть товарів">
+                    <template #body="{ data }">
+                      {{ totalCount }}
+                    </template>
+                  </Column>
+                  <Column field="soldCount" header="Продано товарів">
+                    <template #body="{ data }">
+                      {{ data.soldCount ?? 0 }}
+                    </template>
+                  </Column>
+                  <Column field="totalSum" header="Ціна поставки">
+                    <template #body="{ data }">
+                      {{ Number(totalSum).toFixed(2) }}
+                    </template>
+                  </Column>
+                  <Column field="soldMoney" header="Продано на суму">
+                    <template #body="{ data }">
+                      {{ Number(data.soldMoney ?? 0).toFixed(2) }}
+                    </template>
+                  </Column>
+                  <Column field="totalIncome" header="Чистий прибуток">
+                    <template #body="{ data }">
+                      {{ Number(totalIncome).toFixed(2) }}
+                    </template>
+                  </Column>
+                </DataTable>
+              </AccordionContent>
+            </AccordionPanel>
+          </Accordion>
           <RowsTable :delivery-disabled="!deliveryFeeAvailable" :rows="supply.rows"></RowsTable>
           <div class="d-flex form-group justify-content-start">
             <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" severity="warn" @click="cancel" />

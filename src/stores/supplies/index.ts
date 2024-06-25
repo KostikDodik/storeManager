@@ -17,5 +17,11 @@ export const useSuppliesStore = defineStore('supplies', () => {
         if (!supplies.value.length) await actions.getAll(state)
     };
     const get = async (id: string) => await actions.get(state, id)
-    return {supplies, init, get, add, remove, update, calculateDeliveryFees};
+    return {
+        supplies, init, get, add, remove, update, calculateDeliveryFees,
+        getSupplySum: actions.getSupplySum,
+        getSupplyCount: actions.getSupplyCount,
+        getSupplyDeliveryFee: actions.getSupplyDeliveryFee,
+        getSupplyIncome: actions.getSupplyIncome
+    };
 });

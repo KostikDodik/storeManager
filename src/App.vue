@@ -46,7 +46,7 @@ const items = ref([...orderMenuItems(router), ...supplyMenuItems(router)]);
         </div>
       </template>
     </Menubar>
-    <div class="d-flex flex-grow-1 flex-shrink-1">
+    <div class="d-flex flex-auto h-25">
       <RouterView/>
     </div>
   </div>

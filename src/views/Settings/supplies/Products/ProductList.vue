@@ -69,8 +69,8 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div class="d-flex justify-content-center flex-auto">
-    <Card class="w-75" rounded>
+  <div class="d-flex justify-content-center flex-auto overflow-y-scroll">
+    <Card class="w-100 h-fit-content m-4" rounded>
       <template #header>
         <h3 class="bg-success-subtle pb-2 ps-3 pt-3">
           Найменування продуктів:
