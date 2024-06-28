@@ -101,7 +101,6 @@ onBeforeMount(() => {
               <div class="w-100 d-flex justify-content-between">
                 <Select
                     v-model="order.salePlatformId"
-                    editable
                     :options="salePlatforms"
                     optionLabel="name"
                     optionValue="id"

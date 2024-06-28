@@ -22,6 +22,9 @@ const editMode = computed(() => !!product?.value?.id)
 
 watch(() => props.display, () => {
     display.value = props.display
+    if (props.display) {
+        fillProps();
+    }
 });
 
 watch(() => display.value, () => {
@@ -35,11 +38,15 @@ const categorySelected = (category: TreeNode) => {
     }
 }
 const fillProps = () => {
-    product.value = <IProduct> (props.product ? { ...props.product } : {});
-    categorySelect.value = {};
-    if (props.product?.categoryId) {
-        categorySelect.value[props.product?.categoryId] = true;
-    } 
+    if (props.product) {
+        product.value = <IProduct> { ...props.product };
+        if (props.product.categoryId) {
+            categorySelect.value = { [props.product?.categoryId]: true };
+        }
+        return;
+    }
+    let categoryId = Object.keys(categorySelect.value).find(key => categorySelect.value[key])
+    product.value = <IProduct> { categoryId };
 }
 
 watch(() => props.product, fillProps);
@@ -68,8 +75,7 @@ const onEditCategoryClose = (id?: string) => {
     editCategoryDisplay.value = false;
     if (product.value && id) {
         product.value.categoryId = id;
-        categorySelect.value = {};
-        categorySelect.value[id] = true;
+        categorySelect.value = {[id]: true};
     }
 }
 
@@ -81,7 +87,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <Dialog v-model:visible="display" modal :style="{width: '25rem'}" :header="editMode ? 'Редагувати найменування продукту' : 'Нове найменування продукту'">
+  <Dialog v-model:visible="display" modal :style="{width: '60rem'}" :header="editMode ? 'Редагувати найменування продукту' : 'Нове найменування продукту'">
     <form @submit="ok">
       <div class="form-group">
         <label for="name">Ім'я</label>
