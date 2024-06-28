@@ -3,6 +3,7 @@ import {RouterView, useRouter} from 'vue-router'
 import {computed, onMounted, ref} from "vue";
 import supplyMenuItems from "./views/Settings/supplies/menuItems";
 import orderMenuItems from "./views/Settings/sales/menuItems";
+import statisticMenuItems from "./views/Settings/statistics/menuItems";
 
 const router = useRouter();
 
@@ -20,7 +21,7 @@ onMounted(() => {
     activeLink.value = arr[arr.length - 1];
 });
 
-const items = ref([...orderMenuItems(router), ...supplyMenuItems(router)]);
+const items = ref([...orderMenuItems(router), ...supplyMenuItems(router), ...statisticMenuItems(router)]);
 
 </script>
 
