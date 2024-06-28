@@ -1,11 +1,12 @@
 ﻿<script setup lang="ts">
-import {computed, onBeforeMount, Ref, ref} from 'vue';
+import {computed, onBeforeMount, ref} from 'vue';
 import {FilterMatchMode} from "primevue/api";
 import {useSuppliersStore} from "@/stores/suppliers";
 import {useSuppliesStore} from "@/stores/supplies";
 import {ISupplier} from "@/types/ISupplier";
-import {ISupply, stateDisplayName, stateOptions} from "@/types/ISupply";
+import {ISupply} from "@/types/ISupply";
 import {useRouter} from "vue-router";
+import {supplyStateDisplayName, supplyStateOptions, SupplyState} from "@/types/ISupplyState";
 
 interface IDisplaySupply extends ISupply {
     supplier?: ISupplier;
@@ -24,7 +25,7 @@ const displaySupplies = computed(() => supplies.value?.map(s => {
     if (s?.supplierId) {
         ds.supplier = suppliers.value.find(sup => sup.id === s.supplierId);
     }
-    ds.stateName = stateDisplayName(s.state);
+    ds.stateName = supplyStateDisplayName(s.state);
     return ds;
 }));
 
@@ -46,10 +47,17 @@ const editClick = (data: ISupply) => {
 const deleteClick = (data: ISupply) => {
     supplyStore.remove(data);
 };
-const addSupply = (data?: ISupply) => {
+const addSupply = () => {
     router.push({
         name: "supplies.create"
     });
+};
+
+const rowClass = (data: string | IDisplaySupply | undefined) => {
+    if (!data || typeof(data) === "string") {
+        return;
+    }
+    return [{ 'bg-success-subtle': data.state === SupplyState.SoldOut }];
 };
 
 onBeforeMount(() => {
@@ -82,6 +90,7 @@ onBeforeMount(() => {
             removableSort
             stripedRows
             size="small"
+            :row-class="rowClass"
         >
           <template #empty> Не знайдено поставок</template>
           <template #loading> Завантаження поставок..</template>
@@ -109,7 +118,7 @@ onBeforeMount(() => {
               {{ data.stateName }}
             </template>
             <template #filter="{ filterModel, filterCallback }">
-              <Select v-model="filterModel.value" editable :options="stateOptions" optionLabel="name" optionValue="value" @change="filterCallback()" placeholder="Статус" class="d-flex w-100" />
+              <Select v-model="filterModel.value" editable :options="supplyStateOptions" optionLabel="name" optionValue="value" @change="filterCallback()" placeholder="Статус" class="d-flex w-100" />
             </template>
             
           </Column>

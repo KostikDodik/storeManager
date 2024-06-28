@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref, watch} from "vue";
-import {ISupply, stateOptions, SupplyState} from "@/types/ISupply";
+import {ISupply} from "@/types/ISupply";
 import {useSuppliesStore} from "@/stores/supplies";
 import {useRoute, useRouter} from "vue-router";
 import {useSuppliersStore} from "@/stores/suppliers";
 import RowsTable from "./RowsTable.vue";
 import EditSupplier from "../Suppliers/EditSupplier.vue";
 import {useProductsStore} from "@/stores/products";
+import {ISelectOption} from "@/types/ISelectOption";
+import {supplyStateOptions, SupplyState} from "@/types/ISupplyState";
 
 const supplyStore = useSuppliesStore();
 const supplierStore = useSuppliersStore();
@@ -84,6 +86,9 @@ const onDeliveryFeeChanged = () => {
     supplyStore.calculateDeliveryFees(supply.value);
 }
 
+const stateSelectShown = ref(false);
+const optionDisabled = (data: ISelectOption) => stateSelectShown.value && !!data.disabled;
+
 onBeforeMount(() => {
     supplierStore.init().then(() => suppliersLoading.value = false);
     loadSupplies();
@@ -135,9 +140,12 @@ onBeforeMount(() => {
               <label for="updatedState">Статус </label>
               <Select 
                   v-model="supply.state" 
-                  :options="stateOptions" 
-                  optionLabel="name" 
-                  optionValue="value" 
+                  :options="supplyStateOptions" 
+                  option-label="name" 
+                  option-value="value"
+                  :option-disabled="optionDisabled"
+                  @before-show="() => stateSelectShown = true"
+                  @before-hide="() => stateSelectShown = false"
                   placeholder="Статус" 
                   class="d-flex w-100"
               />              

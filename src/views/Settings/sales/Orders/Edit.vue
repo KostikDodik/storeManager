@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref, watch} from "vue";
-import {IOrder, ItemState, stateOptions} from "@/types/IOrder";
+import {IOrder} from "@/types/IOrder";
 import {useOrdersStore} from "@/stores/orders";
 import {useRoute, useRouter} from "vue-router";
 import {useSalePlatformsStore} from "@/stores/salePlatforms";
 import RowsTable from "./RowsTable.vue";
 import EditSalePlatform from "../SalePlatforms/EditSalePlatform.vue";
 import {useProductsStore} from "@/stores/products";
+import {ItemState, itemStateOptions} from "@/types/IItemState";
 
 const orderStore = useOrdersStore();
 const productStore = useProductsStore();
@@ -27,7 +28,7 @@ const loadOrders = async () => {
 }
 watch(() => orderId.value, loadOrders);
 const editMode = computed(() => !!originalOrder?.value?.id);
-const orderStates = ref(stateOptions.slice(1));
+const orderStates = ref(itemStateOptions.slice(1));
 
 const order = ref(<IOrder>{});
 const fillProps = () => {

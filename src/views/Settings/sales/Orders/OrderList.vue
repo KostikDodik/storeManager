@@ -4,10 +4,11 @@ import {FilterMatchMode} from "primevue/api";
 import {useSalePlatformsStore} from "@/stores/salePlatforms";
 import {useOrdersStore} from "@/stores/orders";
 import {ISalePlatform} from "@/types/ISalePlatform";
-import {IOrder, stateDisplayName, stateOptions} from "@/types/IOrder";
+import {IOrder} from "@/types/IOrder";
 import {useRouter} from "vue-router";
 import {useViewModel} from "@/stores/viewModel";
 import {DataTablePageEvent} from "primevue/datatable";
+import {itemStateDisplayName, itemStateOptions} from "@/types/IItemState";
 
 interface IDisplayOrder extends IOrder {
     salePlatform?: ISalePlatform;
@@ -27,7 +28,7 @@ const displayOrders = computed(() => orders.value?.map(s => {
     if (s?.salePlatformId) {
         ds.salePlatform = salePlatforms.value.find(sup => sup.id === s.salePlatformId);
     }
-    ds.stateName = stateDisplayName(s.state);
+    ds.stateName = itemStateDisplayName(s.state);
     return ds;
 }));
 
@@ -56,6 +57,8 @@ const addOrder = (data?: IOrder) => {
         name: "orders.create"
     });
 };
+
+const orderStates = ref(itemStateOptions.slice(1))
 
 const pageChanged = (event: DataTablePageEvent) => {
     viewModel.orderListCurrentPage = event.page;
@@ -134,7 +137,7 @@ onBeforeMount(() => {
             <template #filter="{ filterModel, filterCallback }">
               <Select 
                   v-model="filterModel.value" 
-                  editable :options="stateOptions" 
+                  :options="orderStates" 
                   optionLabel="name" optionValue="value" 
                   @change="filterCallback()" 
                   placeholder="Статус" 
