@@ -79,8 +79,8 @@ function calculateSalesByCategory(byProduct: ISalesByProduct[], categoryTree?: I
         item.salesCount = sumCategory(item, product => product.salesCount); 
         item.income = sumCategory(item, product => product.income);
         item.netProfit = sumCategory(item, product => product.netProfit);
-        item.salesPercent = (item.salesCount / totalSales) * 100;
-        item.netProfitPercent = (item.netProfit / totalNet) * 100;
+        item.salesPercent = totalSales && ((item.salesCount / totalSales) * 100);
+        item.netProfitPercent = totalNet && ((item.netProfit / totalNet) * 100);
 
         salesByCategory.push(item);
     }
