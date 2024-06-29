@@ -25,6 +25,11 @@ import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
 
 import Lara from 'primevue/themes/lara';
 
@@ -59,5 +64,10 @@ app.component("Accordion", Accordion);
 app.component("AccordionPanel", AccordionPanel);
 app.component("AccordionHeader", AccordionHeader);
 app.component("AccordionContent", AccordionContent);
+app.component("Tabs", Tabs);
+app.component("TabList", TabList);
+app.component("Tab", Tab);
+app.component("TabPanels", TabPanels);
+app.component("TabPanel", TabPanel);
 
 app.mount('#app')

@@ -86,3 +86,15 @@ function calculateSalesByCategory(byProduct: ISalesByProduct[], categoryTree?: I
     }
     return salesByCategory;
 }
+
+export async function getSupplyStatistics(state: IStatisticsState, start?: Date, end?: Date) {
+    let cache = state.supplyStats.value[keyFromDate(start)]?.[keyFromDate(end)];
+    if (!cache) {
+        cache = await statisticsService.getSupplyStatistics(start, end);
+        state.supplyStats.value[keyFromDate(start)] = {
+            ...state.supplyStats.value[keyFromDate(start)],
+            [keyFromDate(end)]: cache,
+        };
+    }
+    return cache;
+}

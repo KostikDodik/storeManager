@@ -2,7 +2,7 @@
     {
         path: '/statistics',
         name: 'settings.statistics',
-        component: () => import('./statistics.vue')
+        component: () => import('./Statistics.vue')
     }
 ];
 
