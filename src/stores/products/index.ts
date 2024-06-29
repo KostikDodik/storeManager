@@ -4,11 +4,14 @@ import type {IProduct} from "@/types/IProduct";
 import type IProductState from "./state";
 import * as actions from "./actions";
 import {getAvailableProducts} from "./actions";
+import {useViewModel} from "@/stores/viewModel";
 
 export const useProductsStore = defineStore('products', () => {
     const products = ref<IProduct[]>([]);
+    const viewModel = useViewModel();
+    const setCurrentPage = (page: number) => viewModel.productsCurrentPage = page;
 
-    const state: IProductState = { products };
+    const state: IProductState = { products, setCurrentPage };
     const add = async (product: IProduct) => await actions.add(state, product);
     const update = async (product: IProduct) => await actions.update(state, product);
     const remove = async (product: IProduct) => await actions.remove(state, product);

@@ -8,6 +8,7 @@ export async function add(state: IProductState, product: IProduct) {
     const newProduct = await productService.addProduct(product);
     product.id = newProduct.id;
     if (!await loadList(state)) {
+        state.setCurrentPage(0);
         state.products.value.push(newProduct);
     }
     // Don't need to refresh as it was not initialised before and now is loaded with changes

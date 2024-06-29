@@ -8,6 +8,8 @@ import {ICategory, makeTreeSelectNodes} from "@/types/ICategory";
 import {FilterMatchMode} from "primevue/api";
 import {ColumnFilterModelType} from "primevue/column";
 import {TreeNode} from "primevue/treenode";
+import {useViewModel} from "@/stores/viewModel";
+import {DataTablePageEvent} from "primevue/datatable";
 
 interface IDisplayProduct extends IProduct {
     category?: ICategory;
@@ -66,6 +68,11 @@ onBeforeMount(() => {
     productStore.init().then(() => loading.value = false);
 });
 
+const viewModel = useViewModel();
+const pageChanged = (event: DataTablePageEvent) => {
+    viewModel.productsCurrentPage = event.page;
+}
+
 </script>
 
 <template>
@@ -92,6 +99,8 @@ onBeforeMount(() => {
             removableSort
             stripedRows
             size="small"
+            :first="10 * viewModel.supplyListCurrentPage"
+            @page="pageChanged"
         >
           <template #empty> Не знайдено найменувань продуктів </template>
           <template #loading> Завантаження найменувань.. </template>
