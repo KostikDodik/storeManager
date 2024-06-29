@@ -3,7 +3,8 @@ import {IOrder} from "@/types/IOrder";
 
 export interface IOrderState {
     orders: Ref<IOrder[]>
-    orderDictionary: Ref<IOrderDictionary>
+    orderDictionary: Ref<IOrderDictionary>,
+    setCurrentPage: (page: number) => void    
 }
 
 export interface IOrderDictionary {

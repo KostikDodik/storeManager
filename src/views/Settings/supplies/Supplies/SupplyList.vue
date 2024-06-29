@@ -7,6 +7,8 @@ import {ISupplier} from "@/types/ISupplier";
 import {ISupply} from "@/types/ISupply";
 import {useRouter} from "vue-router";
 import {supplyStateDisplayName, supplyStateOptions, SupplyState} from "@/types/ISupplyState";
+import {useViewModel} from "@/stores/viewModel";
+import {DataTablePageEvent} from "primevue/datatable";
 
 interface IDisplaySupply extends ISupply {
     supplier?: ISupplier;
@@ -15,6 +17,7 @@ interface IDisplaySupply extends ISupply {
 
 const supplierStore = useSuppliersStore();
 const supplyStore = useSuppliesStore();
+const viewModel = useViewModel();
 const router = useRouter();
 
 const supplies = computed(() => supplyStore.supplies);
@@ -64,6 +67,10 @@ onBeforeMount(() => {
     supplierStore.init();
     supplyStore.init().then(() => loading.value = false);
 });
+
+const pageChanged = (event: DataTablePageEvent) => {
+    viewModel.supplyListCurrentPage = event.page;
+}
 </script>
 
 <template>
@@ -91,6 +98,8 @@ onBeforeMount(() => {
             stripedRows
             size="small"
             :row-class="rowClass"
+            :first="10 * viewModel.supplyListCurrentPage"
+            @page="pageChanged"
         >
           <template #empty> Не знайдено поставок</template>
           <template #loading> Завантаження поставок..</template>

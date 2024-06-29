@@ -8,8 +8,9 @@ const orderService = new OrderService();
 export async function add(state: IOrderState, order: IOrder) {
     let newOrder = await orderService.addOrder(order);
     if (!await loadList(state)) {
-        state.orders.value.push(newOrder);
-    } 
+        state.setCurrentPage(0);
+        state.orders.value.splice(0, 0, newOrder);
+    }
     // Don't need to refresh as it was not initialised before and now is loaded with changes
 }
 

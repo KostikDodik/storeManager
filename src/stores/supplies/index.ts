@@ -3,12 +3,16 @@ import {computed, ref} from "vue";
 import type {ISupply} from "@/types/ISupply";
 import type {ISupplyState, ISupplyDictionary} from "./state";
 import * as actions from "./actions";
+import {useViewModel} from "@/stores/viewModel";
 
 export const useSuppliesStore = defineStore('supplies', () => {
     const supplies = ref<ISupply[]>([]);
     const supplyDictionary = ref(<ISupplyDictionary>{});
+    const viewModel = useViewModel();
+    const setCurrentPage = (page: number) => viewModel.supplyListCurrentPage = page;
+    
 
-    const state: ISupplyState = {supplies, supplyDictionary};
+    const state: ISupplyState = {setCurrentPage, supplies, supplyDictionary};
     const add = async (supply: ISupply) => await actions.add(state, supply);
     const update = async (supply: ISupply) => await actions.update(state, supply);
     const remove = async (supply: ISupply) => await actions.remove(state, supply);

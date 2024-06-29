@@ -7,7 +7,8 @@ const supplyService = new SupplyService();
 export async function add(state: ISupplyState, supply: ISupply) {
     const newSupply = await supplyService.addSupply(supply);
     if (!await loadList(state)) {
-        state.supplies.value.push(newSupply);        
+        state.setCurrentPage(0);
+        state.supplies.value.splice(0, 0, newSupply);        
     }
 }
 
