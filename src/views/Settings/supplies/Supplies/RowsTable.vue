@@ -30,6 +30,7 @@ const addProduct = (row: ISupplyRow) => {
   editProduct.value = products.value.find(p => p.id === row.productId)
   editProductDisplay.value = true;
 };
+
 const onProductModalClose = (id?: string) => {
     editProductDisplay.value = false;
     editProduct.value = undefined;
@@ -88,6 +89,8 @@ onBeforeMount(() => {
                 <Select
                     v-model="data.productId"
                     filter
+                    reset-filter-on-hide
+                    reset-filter-on-clear
                     :options="products"
                     optionLabel="name"
                     optionValue="id"

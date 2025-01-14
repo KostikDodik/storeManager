@@ -8,6 +8,13 @@ declare global {
 
     interface Date {
         toUaString(): string;
+        toUaTimeString(): string;
+        getDateOnly(): Date;
+        formatDate(): Date;
+    }
+    
+    interface String {
+        formatDate(): Date;
     }
 }
 export {};

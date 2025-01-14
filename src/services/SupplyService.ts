@@ -1,17 +1,15 @@
 import type {ISupply} from "@/types/ISupply";
 import Service from "@/services/Service";
 
-interface IRawSupply extends Omit<ISupply, 'date'|'updatedState'> {
+interface IRawSupply extends Omit<ISupply, 'date'|'updatedState'|'dateEdited'> {
     date: string | Date
-    updatedState: string | Date
+    updatedState: string | Date,
+    dateEdited: string | Date
 }
 function formatDates(raw: IRawSupply): ISupply {
-    if (typeof raw.date === "string") {
-        raw.date = new Date(raw.date);
-    }
-    if (typeof raw.updatedState === "string") {
-        raw.updatedState = new Date(raw.updatedState);
-    }
+    raw.date = raw.date?.formatDate();
+    raw.updatedState = raw.updatedState?.formatDate();
+    raw.dateEdited = raw.dateEdited?.formatDate();
     return <ISupply>raw;
 }
 export class SupplyService extends Service {

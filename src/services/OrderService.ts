@@ -1,17 +1,16 @@
 import type {IOrder} from "@/types/IOrder";
 import Service from "@/services/Service";
 
-interface IRawOrder extends Omit<IOrder, 'date'|'updatedState'> {
+interface IRawOrder extends Omit<IOrder, 'date'|'updatedState'|'dateEdited'> {
     date: string | Date
-    updatedState: string | Date
+    updatedState: string | Date,
+    dateEdited: string | Date
 }
+
 function formatDates(raw: IRawOrder): IOrder {
-    if (typeof raw.date === "string") {
-        raw.date = new Date(raw.date);
-    }
-    if (typeof raw.updatedState === "string") {
-        raw.updatedState = new Date(raw.updatedState);
-    }
+    raw.date = raw.date?.formatDate();
+    raw.updatedState = raw.updatedState?.formatDate();
+    raw.dateEdited = raw.dateEdited?.formatDate();
     return <IOrder>raw;
 }
 export class OrderService extends Service {

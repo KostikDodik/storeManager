@@ -30,6 +30,7 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
+import ConfirmationService from 'primevue/confirmationservice';
 
 import Lara from 'primevue/themes/lara';
 
@@ -59,6 +60,7 @@ app.use(PrimeVue, {
         weekHeader: "ТД"
     }
 });
+app.use(ConfirmationService);
 app.component("Button", Button);
 app.component("TreeTable", TreeTable);
 app.component("Column", Column);

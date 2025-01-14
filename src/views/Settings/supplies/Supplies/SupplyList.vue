@@ -9,6 +9,7 @@ import {useRouter} from "vue-router";
 import {supplyStateDisplayName, supplyStateOptions, SupplyState} from "@/types/ISupplyState";
 import {useViewModel} from "@/stores/viewModel";
 import {DataTablePageEvent} from "primevue/datatable";
+import {useConfirm} from "primevue/useconfirm";
 
 interface IDisplaySupply extends ISupply {
     supplier?: ISupplier;
@@ -46,10 +47,26 @@ const editClick = (data: ISupply) => {
         params: {id: data.id}
     })
 };
-
-const deleteClick = (data: ISupply) => {
-    supplyStore.remove(data);
+const confirm = useConfirm();
+const deleteClick = (data: IDisplaySupply) => {
+    confirm.require({
+        message: `Чи ви певні, що хочете видалити поставку ${data.supplier?.name} №${data.number}`,
+        header: "Видалити поставку?",
+        icon: 'fa fa-circle-exclamation',
+        rejectProps: {
+            label: "Cкасувати"
+        },
+        acceptProps: {
+            label: "Видалити",
+            severity: "danger"
+        },
+        defaultFocus: 'reject',
+        accept: () => void (async(): Promise<void> => {
+            await supplyStore.remove(data);
+        })()
+    });
 };
+
 const addSupply = () => {
     router.push({
         name: "supplies.create"
@@ -105,12 +122,16 @@ const pageChanged = (event: DataTablePageEvent) => {
           <template #loading> Завантаження поставок..</template>
           <Column field="supplierId" header="Постачальник" :showFilterMenu="false" sortable>
             <template #body="{ data }">
-              {{ data.supplier?.name }}
+              <span @click="editClick(data)" style="cursor: pointer;">
+                {{ data.supplier?.name }}                
+              </span>
             </template>
             <template #filter="{ filterModel, filterCallback }">
               <Select 
                   v-model="filterModel.value" 
                   filter
+                  reset-filter-on-hide
+                  reset-filter-on-clear
                   :options="suppliers" 
                   optionLabel="name" 
                   optionValue="id" 
@@ -120,16 +141,33 @@ const pageChanged = (event: DataTablePageEvent) => {
               />
             </template>
           </Column>
-          <Column field="number" header="П/н" headerStyle="width: 4em"></Column>
-          <Column field="trackingNumber" header="Номер ТТН" headerStyle="width: 15em"></Column>
+          <Column field="number" header="П/н" headerStyle="width: 4em" sortable></Column>
+          <Column field="dateEdited" header="Остання зміна" headerStyle="width: 10em" sortable>
+            <template #body="{ data }: { data: ISupply }">
+              {{ data.dateEdited?.toUaTimeString() }}
+            </template>
+          </Column>
           <Column field="state" header="Статус" headerStyle="width: 12rem" :showFilterMenu="false" sortable>
             <template #body="{ data }">
               {{ data.stateName }}
             </template>
             <template #filter="{ filterModel, filterCallback }">
-              <Select v-model="filterModel.value" editable :options="supplyStateOptions" optionLabel="name" optionValue="value" @change="filterCallback()" placeholder="Статус" class="d-flex w-100" />
+              <Select 
+                v-model="filterModel.value" 
+                editable 
+                :options="supplyStateOptions" 
+                optionLabel="name" 
+                optionValue="value" 
+                @change="filterCallback()" 
+                placeholder="Статус" 
+                class="d-flex w-100" 
+              />
+            </template>            
+          </Column>
+          <Column field="updatedState" header="Статус оновлено" headerStyle="width: 8em" sortable>
+            <template #body="{ data }: { data: ISupply }">
+              {{ data.updatedState?.toLocaleDateString() }}
             </template>
-            
           </Column>
           <Column field="totalIncome" header="Дохід" headerStyle="width: 8rem">
             <template #body="{ data }">

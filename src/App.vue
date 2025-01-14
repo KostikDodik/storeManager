@@ -4,6 +4,7 @@ import {computed, onMounted, ref} from "vue";
 import supplyMenuItems from "./views/Settings/supplies/menuItems";
 import orderMenuItems from "./views/Settings/sales/menuItems";
 import statisticMenuItems from "./views/Settings/statistics/menuItems";
+import ConfirmDialog from "primevue/ConfirmDialog";
 
 const router = useRouter();
 
@@ -50,5 +51,6 @@ const items = ref([...orderMenuItems(router), ...supplyMenuItems(router), ...sta
     <div class="d-flex flex-auto h-25">
       <RouterView/>
     </div>
+    <ConfirmDialog />
   </div>
 </template>

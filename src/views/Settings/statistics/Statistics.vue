@@ -126,7 +126,7 @@ onBeforeMount(() => loadStatistics());
 </template>
 
 <style>
-.table-striped .p-treetable-table tbody > tr:nth-of-type(odd) {
+.table-striped.p-treetable tbody > tr:nth-of-type(odd) {
     color: var(--bs-table-striped-color);
     background-color: rgba(0, 0, 0, 0.01);
 }

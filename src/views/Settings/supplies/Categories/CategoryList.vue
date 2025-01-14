@@ -4,6 +4,7 @@ import {useCategoriesStore} from "@/stores/categories";
 import {makeTreeNodes} from "@/types/ITreeNode";
 import {ICategory} from "@/types/ICategory";
 import EditCategory from './EditCategory.vue';
+import {useConfirm} from "primevue/useconfirm";
 
 const categoryStore = useCategoriesStore();
 const categories = computed(() => categoryStore.categories);
@@ -19,8 +20,25 @@ const closeEdit = () => {
     currentCategory.value = undefined;
     editCategory.value = false;
 }
+
+const confirm = useConfirm();
 const deleteClick = (data: ICategory) => {
-    categoryStore.remove(data);
+    confirm.require({
+        message: `Чи ви певні, що хочете видалити поставку ${data.name}`,
+        header: "Видалити категорію?",
+        icon: 'fa fa-circle-exclamation',
+        rejectProps: {
+            label: "Cкасувати"
+        },
+        acceptProps: {
+            label: "Видалити",
+            severity: "danger"
+        },
+        defaultFocus: 'reject',
+        accept: () => void (async(): Promise<void> => {
+            await categoryStore.remove(data);
+        })()
+    });    
 };
 const addChild = (data?: ICategory) => {
     currentCategory.value = <ICategory>{ parentId: data?.id };

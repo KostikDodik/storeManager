@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import {computed, onBeforeMount, Ref, ref} from 'vue';
+import {computed, onBeforeMount, Ref, ref, toRaw} from 'vue';
 import {FilterMatchMode} from "primevue/api";
 import {useSalePlatformsStore} from "@/stores/salePlatforms";
 import {useOrdersStore} from "@/stores/orders";
@@ -9,10 +9,13 @@ import {useRouter} from "vue-router";
 import {useViewModel} from "@/stores/viewModel";
 import {DataTablePageEvent} from "primevue/datatable";
 import {itemStateDisplayName, itemStateOptions} from "@/types/IItemState";
+import {useConfirm} from "primevue/useconfirm";
+import {ISupply} from "@/types/ISupply";
 
 interface IDisplayOrder extends IOrder {
     salePlatform?: ISalePlatform;
     stateName?: string;
+    edited: Date;
 }
 
 const salePlatformStore = useSalePlatformsStore();
@@ -24,18 +27,19 @@ const orders = computed(() => orderStore.orders);
 const salePlatforms = computed(() => salePlatformStore.salePlatforms);
 
 const displayOrders = computed(() => orders.value?.map(s => {
-    const ds: IDisplayOrder = s;
+    const ds = structuredClone(toRaw(s) as IDisplayOrder);
     if (s?.salePlatformId) {
         ds.salePlatform = salePlatforms.value.find(sup => sup.id === s.salePlatformId);
     }
     ds.stateName = itemStateDisplayName(s.state);
+    ds.edited = ds.dateEdited?.getDateOnly();
     return ds;
 }));
 
 const filters = ref({
     name: { value: null, matchMode: FilterMatchMode.CONTAINS },
     code: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    date: {value: null, matchMode: FilterMatchMode.EQUALS},
+    edited: {value: null, matchMode: FilterMatchMode.EQUALS},
     updatedState: {value: null, matchMode: FilterMatchMode.EQUALS},
     salePlatformId: {value: null, matchMode: FilterMatchMode.EQUALS},
     state: { value: null, matchMode: FilterMatchMode.EQUALS}
@@ -49,9 +53,26 @@ const editClick = (data: IOrder) => {
     })
 };
 
-const deleteClick = (data: IOrder) => {
-    orderStore.remove(data);
+const confirm = useConfirm();
+const deleteClick = (data: IDisplayOrder) => {
+    confirm.require({
+        message: `Чи ви певні, що хочете видалити замовлення ${data.salePlatform?.name} №${data.number}`,
+        header: "Видалити замовлення?",
+        icon: 'fa fa-circle-exclamation',
+        rejectProps: {
+            label: "Cкасувати"
+        },
+        acceptProps: {
+            label: "Видалити",
+            severity: "danger"
+        },
+        defaultFocus: 'reject',
+        accept: () => void (async(): Promise<void> => {
+            await orderStore.remove(data);
+        })()
+    });
 };
+
 const addOrder = (data?: IOrder) => {
     router.push({
         name: "orders.create"
@@ -101,12 +122,16 @@ onBeforeMount(() => {
           <template #loading> Завантаження замовлень..</template>
           <Column field="salePlatformId" header="Торгова платформа" :showFilterMenu="false" headerStyle="width: 15em" sortable>
             <template #body="{ data }">
-              {{ data.salePlatform?.name }}
+              <span @click="editClick(data)" style="cursor: pointer;">
+                {{ data.salePlatform?.name }}                
+              </span>
             </template>
             <template #filter="{ filterModel, filterCallback }">
               <Select 
                   v-model="filterModel.value" 
                   filter
+                  reset-filter-on-hide
+                  reset-filter-on-clear
                   :options="salePlatforms" 
                   optionLabel="name" optionValue="id" 
                   @change="filterCallback()" 
@@ -115,17 +140,17 @@ onBeforeMount(() => {
               />
             </template>
           </Column>
-          <Column field="number" header="П/н" headerStyle="width: 4em"></Column>
-          <Column field="date" header="Дата формування" :showFilterMenu="false" headerStyle="width: 11em" sortable>
-            <template #body="{ data }">
-              {{ data.date.toUaString() }}
+          <Column field="number" header="П/н" headerStyle="width: 4em" sortable></Column>
+          <Column field="edited" header="Остання зміна" headerStyle="width: 8em" sortable>
+            <template #body="{ data }: { data: ISupply }">
+              {{ data.dateEdited?.toUaTimeString() }}
             </template>
             <template #filter="{ filterModel, filterCallback }">
               <DatePicker
-                  v-model="filterModel.value"
-                  dateFormat="dd/mm/yy"
-                  class="d-flex w-100"
-                  @update:modelValue="filterCallback()"
+                v-model="filterModel.value"
+                dateFormat="dd/mm/yy"
+                class="d-flex w-100"
+                @update:modelValue="filterCallback()"
               />
             </template>
           </Column>

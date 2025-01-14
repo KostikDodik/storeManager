@@ -4,6 +4,7 @@ export interface IOrder {
   id: string;
   name: string;
   date: Date;
+  dateEdited: Date;
   updatedState: Date;
   trackingNumber: string;
   salePlatformId: string;

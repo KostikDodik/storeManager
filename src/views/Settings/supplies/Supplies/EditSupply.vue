@@ -94,6 +94,9 @@ onBeforeMount(() => {
     loadSupplies();
     fillProps();
 });
+
+watch(() => supply.value?.deliveryFee, onDeliveryFeeChanged);
+
 </script>
 
 <template>
@@ -161,14 +164,23 @@ onBeforeMount(() => {
             </div>
             <div class="form-group col-6">
               <label for="deliveryFee">Ціна за доставку: </label>
-              <InputNumber 
-                  id="deliveryFee" 
-                  v-model="supply.deliveryFee" 
+              <div class="d-flex w-100">
+                <InputNumber
+                  id="deliveryFee"
+                  v-model="supply.deliveryFee"
                   :disabled="!deliveryFeeAvailable"
                   :minFractionDigits="2"
                   :maxFractionDigits="2"
-                  @blur="onDeliveryFeeChanged"
-                  class="d-flex w-100"/>
+                  class="flex-fill"
+                />
+                <Button
+                  type="button"
+                  icon="fa fa-check"
+                  class="ms-2 w-25 flex-shrink-0"
+                  v-tooltip="'Розрахувати доставку за позиціями'"
+                  @click="onDeliveryFeeChanged"
+                >Розрахувати доставку</Button>
+              </div>
             </div>
           </div>
           <Accordion class="mb-3">

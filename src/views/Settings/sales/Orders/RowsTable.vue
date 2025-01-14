@@ -90,6 +90,8 @@ const getAvailable = (row: IOrderRow): number => {
                 <Select
                     v-model="data.productId"
                     filter
+                    reset-filter-on-hide
+                    reset-filter-on-clear
                     :options="products"
                     optionLabel="name"
                     optionValue="id"

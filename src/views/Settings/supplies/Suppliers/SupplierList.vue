@@ -4,6 +4,7 @@ import {ISupplier} from "@/types/ISupplier";
 import {FilterMatchMode} from "primevue/api";
 import EditSupplier from "./EditSupplier.vue";
 import {useSuppliersStore} from "@/stores/suppliers";
+import {useConfirm} from "primevue/useconfirm";
 
 const supplierStore = useSuppliersStore();
 
@@ -25,8 +26,25 @@ const closeEdit = () => {
     currentSupplier.value = undefined;
     editSupplier.value = false;
 }
+
+const confirm = useConfirm();
 const deleteClick = (data: ISupplier) => {
-    supplierStore.remove(data);
+    confirm.require({
+        message: `Чи ви певні, що хочете видалити постачальника ${data.name}`,
+        header: "Видалити постачальника?",
+        icon: 'fa fa-circle-exclamation',
+        rejectProps: {
+            label: "Cкасувати"
+        },
+        acceptProps: {
+            label: "Видалити",
+            severity: "danger"
+        },
+        defaultFocus: 'reject',
+        accept: () => void (async(): Promise<void> => {
+            await supplierStore.remove(data);
+        })()
+    });
 };
 const addSupplier = () => {
     currentSupplier.value = <ISupplier>{};

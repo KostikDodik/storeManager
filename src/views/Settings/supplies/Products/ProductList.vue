@@ -10,6 +10,7 @@ import {ColumnFilterModelType} from "primevue/column";
 import {TreeNode} from "primevue/treenode";
 import {useViewModel} from "@/stores/viewModel";
 import {DataTablePageEvent} from "primevue/datatable";
+import {useConfirm} from "primevue/useconfirm";
 
 interface IDisplayProduct extends IProduct {
     category?: ICategory;
@@ -29,9 +30,9 @@ const displayProducts = computed(() => products.value?.map(pr => {
 }));
 
 const filters = ref({
-    name: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    code: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    categoryId: { value: null, matchMode: FilterMatchMode.EQUALS }
+    name: {value: null, matchMode: FilterMatchMode.CONTAINS},
+    code: {value: null, matchMode: FilterMatchMode.CONTAINS},
+    categoryId: {value: null, matchMode: FilterMatchMode.EQUALS}
 });
 const loading = ref(true);
 
@@ -40,7 +41,7 @@ const filterCategories = computed(() => makeTreeSelectNodes(categoryStore.catego
 const filterCategory = ref();
 const filterByCategory = (filterCategory: TreeNode, filterModel: ColumnFilterModelType, filterCallback: Function) => {
     if (filterCategory?.key) {
-        filterModel.value = filterCategory?.key;        
+        filterModel.value = filterCategory?.key;
     }
     filterCallback();
 }
@@ -55,8 +56,25 @@ const closeEdit = () => {
     currentProduct.value = undefined;
     editProduct.value = false;
 }
+
+const confirm = useConfirm();
 const deleteClick = (data: IProduct) => {
-    productStore.remove(data);
+    confirm.require({
+        message: `Чи ви певні, що хочете видалити найменування ${data.name}`,
+        header: "Видалити найменування продукту?",
+        icon: 'fa fa-circle-exclamation',
+        rejectProps: {
+            label: "Cкасувати"
+        },
+        acceptProps: {
+            label: "Видалити",
+            severity: "danger"
+        },
+        defaultFocus: 'reject',
+        accept: () => void (async (): Promise<void> => {
+            await productStore.remove(data);
+        })()
+    });
 };
 const addProduct = (data?: IProduct) => {
     currentProduct.value = <IProduct>{};
@@ -87,29 +105,31 @@ const pageChanged = (event: DataTablePageEvent) => {
         <div class="d-flex justify-content-end mb-2">
           <Button type="button" icon="fa-regular fa-plus" severity="success" @click="() => addProduct()" label="Додати найменування"/>
         </div>
-        <DataTable 
-            :value="displayProducts" 
-            v-model:filters="filters" 
-            paginator 
-            :rows="10" 
-            dataKey="id" 
-            filterDisplay="row" 
-            sortMode="multiple" 
-            :loading="loading" 
-            removableSort
-            stripedRows
-            size="small"
-            :first="10 * viewModel.supplyListCurrentPage"
-            @page="pageChanged"
+        <DataTable
+          :value="displayProducts"
+          v-model:filters="filters"
+          paginator
+          :rows="10"
+          dataKey="id"
+          filterDisplay="row"
+          sortMode="multiple"
+          :loading="loading"
+          removableSort
+          stripedRows
+          size="small"
+          :first="10 * viewModel.supplyListCurrentPage"
+          @page="pageChanged"
         >
-          <template #empty> Не знайдено найменувань продуктів </template>
-          <template #loading> Завантаження найменувань.. </template>
+          <template #empty> Не знайдено найменувань продуктів</template>
+          <template #loading> Завантаження найменувань..</template>
           <Column field="name" header="Найменування" :showFilterMenu="false" sortable expander>
             <template #body="{ data }">
-              {{ data.name }}
+              <span @click="editClick(data)" style="cursor: pointer;">
+                {{ data.name }}                
+              </span>
             </template>
             <template #filter="{ filterModel, filterCallback }">
-              <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="d-flex w-100" placeholder="Пошук по імені" />
+              <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="d-flex w-100" placeholder="Пошук по імені"/>
             </template>
           </Column>
           <Column field="code" header="Код" headerStyle="width: 10rem" :showFilterMenu="false" sortable>
@@ -117,7 +137,7 @@ const pageChanged = (event: DataTablePageEvent) => {
               {{ data.code }}
             </template>
             <template #filter="{ filterModel, filterCallback }">
-              <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="d-flex w-100" placeholder="Пошук по коду" />
+              <InputText v-model="filterModel.value" type="text" @input="filterCallback()" class="d-flex w-100" placeholder="Пошук по коду"/>
             </template>
           </Column>
           <Column field="categoryId" header="Категорія" headerStyle="width: 10rem" :showFilterMenu="false" sortable>
@@ -125,7 +145,8 @@ const pageChanged = (event: DataTablePageEvent) => {
               {{ data.category?.name }}
             </template>
             <template #filter="{ filterModel, filterCallback }">
-              <TreeSelect v-model="filterCategory" :options="filterCategories" @node-select="(node) => filterByCategory(node, filterModel, filterCallback)" class="d-flex w-100" placeholder="Виберіть категорію" />
+              <TreeSelect v-model="filterCategory" :options="filterCategories" @node-select="(node) => filterByCategory(node, filterModel, filterCallback)" class="d-flex w-100"
+                          placeholder="Виберіть категорію"/>
             </template>
           </Column>
           <Column field="available" header="Наявність" headerStyle="width: 5rem" sortable>
@@ -144,6 +165,6 @@ const pageChanged = (event: DataTablePageEvent) => {
         </DataTable>
         <EditProduct :product="currentProduct" :display="editProduct" @close="closeEdit"></EditProduct>
       </template>
-    </Card>    
+    </Card>
   </div>
 </template>

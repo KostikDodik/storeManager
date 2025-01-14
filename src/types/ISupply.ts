@@ -15,6 +15,7 @@ export interface ISupply {
     supplierId: string;
     number: number;
     date: Date;
+    dateEdited: Date;
     state: SupplyState;
     trackingNumber: string;
     updatedState: Date;
