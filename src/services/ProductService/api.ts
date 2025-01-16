@@ -10,7 +10,7 @@ export class ProductService extends Service {
         if (!ids) {
             return (await this.get<IProduct[]>(`/products/available`)).data
         }
-        return (await this.get<IProduct[]>(`/products/available?ids=${ids.join("$ids=")}`)).data;
+        return (await this.get<IProduct[]>(`/products/available?ids=${ids.join("&ids=")}`)).data;
     }
 
     public async getProduct(id: string): Promise<IProduct> {
@@ -25,6 +25,9 @@ export class ProductService extends Service {
         return (await this.put<IProduct>(`/products`, product)).data;
     }
 
+    /*
+    * Returns updated available products
+    */
     public async deleteProduct(id: string): Promise<void> {
         await this.delete(`/products/${id}`);
     }

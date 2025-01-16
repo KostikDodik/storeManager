@@ -1,9 +1,7 @@
 ﻿<script setup lang="ts">
 import {computed, onBeforeMount, Ref, ref} from 'vue';
-import {useCategoriesStore} from "@/stores/categories";
 import {IProduct} from "@/types/IProduct";
 import EditProduct from './EditProduct.vue';
-import {useProductsStore} from "@/stores/products";
 import {ICategory, makeTreeSelectNodes} from "@/types/ICategory";
 import {FilterMatchMode} from "primevue/api";
 import {ColumnFilterModelType} from "primevue/column";
@@ -11,21 +9,36 @@ import {TreeNode} from "primevue/treenode";
 import {useViewModel} from "@/stores/viewModel";
 import {DataTablePageEvent} from "primevue/datatable";
 import {useConfirm} from "primevue/useconfirm";
+import {getCategoriesQuery} from "@/services/CategoryService";
+import {deleteProduct, getAllProductsQuery} from "@/services/ProductService";
 
 interface IDisplayProduct extends IProduct {
     category?: ICategory;
 }
 
-const categoryStore = useCategoriesStore();
-const productStore = useProductsStore();
-const products = computed(() => productStore.products);
+const productsQuery = getAllProductsQuery();
+const products = productsQuery.data;
+
+const categories = getCategoriesQuery().data;
+const flattenCategories = (category: ICategory): ICategory[] => {
+    let result: ICategory[] = [category];
+    if (category.children) {
+        for (const child of category.children) {
+            result = result.concat(flattenCategories(child));
+        }
+    }
+    return result;
+}
+const flatCategories = computed<ICategory[]>(() =>
+    categories.value?.flatMap(c => flattenCategories(c)) ?? []);
+
 
 const displayProducts = computed(() => products.value?.map(pr => {
     const dp: IDisplayProduct = pr;
     if (!pr?.categoryId) {
         return dp;
     }
-    dp.category = categoryStore.flatCategories.find(c => c.id === pr.categoryId);
+    dp.category = flatCategories.value?.find(c => c.id === pr.categoryId);
     return dp;
 }));
 
@@ -34,9 +47,9 @@ const filters = ref({
     code: {value: null, matchMode: FilterMatchMode.CONTAINS},
     categoryId: {value: null, matchMode: FilterMatchMode.EQUALS}
 });
-const loading = ref(true);
+const loading = computed(() => productsQuery.isLoading.value);
 
-const filterCategories = computed(() => makeTreeSelectNodes(categoryStore.categories));
+const filterCategories = computed(() => makeTreeSelectNodes(categories.value ?? []));
 
 const filterCategory = ref();
 const filterByCategory = (filterCategory: TreeNode, filterModel: ColumnFilterModelType, filterCallback: Function) => {
@@ -72,7 +85,7 @@ const deleteClick = (data: IProduct) => {
         },
         defaultFocus: 'reject',
         accept: () => void (async (): Promise<void> => {
-            await productStore.remove(data);
+            await deleteProduct(data.id);
         })()
     });
 };
@@ -80,11 +93,6 @@ const addProduct = (data?: IProduct) => {
     currentProduct.value = <IProduct>{};
     editProduct.value = true;
 };
-
-onBeforeMount(() => {
-    categoryStore.init();
-    productStore.init().then(() => loading.value = false);
-});
 
 const viewModel = useViewModel();
 const pageChanged = (event: DataTablePageEvent) => {

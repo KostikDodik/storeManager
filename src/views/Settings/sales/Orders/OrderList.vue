@@ -1,16 +1,17 @@
 ﻿<script setup lang="ts">
-import {computed, onBeforeMount, Ref, ref, toRaw} from 'vue';
+import {computed, onBeforeMount, Ref, ref, toRaw, watch} from 'vue';
 import {FilterMatchMode} from "primevue/api";
-import {useSalePlatformsStore} from "@/stores/salePlatforms";
-import {useOrdersStore} from "@/stores/orders";
 import {ISalePlatform} from "@/types/ISalePlatform";
 import {IOrder} from "@/types/IOrder";
 import {useRouter} from "vue-router";
 import {useViewModel} from "@/stores/viewModel";
-import {DataTablePageEvent} from "primevue/datatable";
+import {DataTableFilterMeta, DataTablePageEvent} from "primevue/datatable";
 import {itemStateDisplayName, itemStateOptions} from "@/types/IItemState";
 import {useConfirm} from "primevue/useconfirm";
 import {ISupply} from "@/types/ISupply";
+import {deleteOrder, getOrdersQuery} from "@/services/OrderService";
+import {refreshProductsById} from "@/services/ProductService";
+import {getSalePlatformsQuery} from "@/services/SalePlatformService";
 
 interface IDisplayOrder extends IOrder {
     salePlatform?: ISalePlatform;
@@ -18,33 +19,24 @@ interface IDisplayOrder extends IOrder {
     edited: Date;
 }
 
-const salePlatformStore = useSalePlatformsStore();
-const orderStore = useOrdersStore();
 const viewModel = useViewModel();
 const router = useRouter();
 
-const orders = computed(() => orderStore.orders);
-const salePlatforms = computed(() => salePlatformStore.salePlatforms);
+const ordersQuery = getOrdersQuery();
+const orders = ordersQuery.data;
+const salePlatforms = getSalePlatformsQuery().data;
 
 const displayOrders = computed(() => orders.value?.map(s => {
     const ds = structuredClone(toRaw(s) as IDisplayOrder);
     if (s?.salePlatformId) {
-        ds.salePlatform = salePlatforms.value.find(sup => sup.id === s.salePlatformId);
+        ds.salePlatform = salePlatforms.value?.find(sup => sup.id === s.salePlatformId);
     }
     ds.stateName = itemStateDisplayName(s.state);
     ds.edited = ds.dateEdited?.getDateOnly();
     return ds;
 }));
 
-const filters = ref({
-    name: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    code: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    edited: {value: null, matchMode: FilterMatchMode.EQUALS},
-    updatedState: {value: null, matchMode: FilterMatchMode.EQUALS},
-    salePlatformId: {value: null, matchMode: FilterMatchMode.EQUALS},
-    state: { value: null, matchMode: FilterMatchMode.EQUALS}
-});
-const loading = ref(true);
+const loading = computed(() => ordersQuery.isLoading.value);
 
 const editClick = (data: IOrder) => {
     router.push({
@@ -68,7 +60,11 @@ const deleteClick = (data: IDisplayOrder) => {
         },
         defaultFocus: 'reject',
         accept: () => void (async(): Promise<void> => {
-            await orderStore.remove(data);
+            await deleteOrder(data.id);
+            if (data.rows?.length) {
+                // updating available products count
+                await refreshProductsById(data.rows.map(r => r.productId));
+            }
         })()
     });
 };
@@ -84,11 +80,6 @@ const orderStates = ref(itemStateOptions.slice(1))
 const pageChanged = (event: DataTablePageEvent) => {
     viewModel.orderListCurrentPage = event.page;
 }
-
-onBeforeMount(() => {
-    salePlatformStore.init();
-    orderStore.init().then(() => loading.value = false);
-});
 </script>
 
 <template>
@@ -105,12 +96,13 @@ onBeforeMount(() => {
         </div>
         <DataTable
             :value="displayOrders"
-            v-model:filters="filters"
+            v-model:filters="viewModel.orderFilters"
             paginator
             :rows="10"
             dataKey="id"
             filterDisplay="row"
             sortMode="multiple"
+            v-model:multiSortMeta="viewModel.orderMultiSortMeta"
             :loading="loading"
             removableSort
             stripedRows

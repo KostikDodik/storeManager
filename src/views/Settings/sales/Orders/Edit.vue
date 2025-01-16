@@ -1,63 +1,65 @@
 <script setup lang="ts">
-import {computed, onBeforeMount, ref, watch} from "vue";
+import {computed, onBeforeMount, ref, toRaw, watch} from "vue";
 import {IOrder} from "@/types/IOrder";
-import {useOrdersStore} from "@/stores/orders";
 import {useRoute, useRouter} from "vue-router";
-import {useSalePlatformsStore} from "@/stores/salePlatforms";
 import RowsTable from "./RowsTable.vue";
 import EditSalePlatform from "../SalePlatforms/EditSalePlatform.vue";
-import {useProductsStore} from "@/stores/products";
 import {ItemState, itemStateOptions} from "@/types/IItemState";
+import {useViewModel} from "@/stores/viewModel";
+import {addOrder, getOrderQuery, updateOrder} from "@/services/OrderService";
+import {refreshProductsById} from "@/services/ProductService";
+import {getSalePlatformsQuery} from "@/services/SalePlatformService";
 
-const orderStore = useOrdersStore();
-const productStore = useProductsStore();
-const salePlatformStore = useSalePlatformsStore();
 const props = defineProps<{
     orderId?: string
 }>();
 const route = useRoute();
+const viewModel = useViewModel();
 const orderId = computed(() => <string>route.params.id || props.orderId);
-const originalOrder = ref(<IOrder>{});
+const orderQuery = getOrderQuery(orderId);
+const originalOrder = orderQuery.data;
 
-const loadOrders = async () => {
-    if (!orderId.value) {
-        return;
-    }
-    originalOrder.value = await orderStore.get(orderId.value);
-    await orderStore.init();
-}
-watch(() => orderId.value, loadOrders);
 const editMode = computed(() => !!originalOrder?.value?.id);
 const orderStates = ref(itemStateOptions.slice(1));
 
 const order = ref(<IOrder>{});
 const fillProps = () => {
-    order.value = <IOrder> (originalOrder.value ? { ...originalOrder.value } : {});
-    order.value.rows = (!order.value.rows ? [] : order.value.rows.map(row => ({ ...row })));
+    order.value = structuredClone(toRaw(originalOrder.value ?? <IOrder>{}));
     order.value.state = order.value.state || ItemState.Ordered;
+    order.value.rows = order.value.rows || [];
 }
 
 watch(() => orderId.value, fillProps);
 watch(() => originalOrder.value, fillProps);
-const salePlatforms = computed(() => salePlatformStore.salePlatforms);
+
+const salePlatformsQuery = getSalePlatformsQuery();
+const salePlatforms = salePlatformsQuery.data;
+
+const orderBeforeSave = ref<IOrder>();
+const checkProductsAfterSave = () => {
+    if (order.value.rows?.length) {
+        // updating available products count
+        refreshProductsById([...new Set([
+            ...(order.value.rows ?? []).map(r => r.productId),
+            ...(orderBeforeSave.value?.rows ?? []).map(r => r.productId)
+        ])])
+    }
+}
 
 const router = useRouter();
 const ok = (event: any) => {
     event.preventDefault();
+    orderBeforeSave.value = structuredClone(toRaw(originalOrder.value ?? <IOrder>{}))
     if (editMode.value) {
-        orderStore.update(order.value).then(() => {
-            if (order.value.rows?.length) {
-              // updating available products count
-              productStore.refresh(order.value.rows.map(r => r.productId));    
-            }            
+        updateOrder(order.value).then(() => {
+            orderQuery.refetch();
+            checkProductsAfterSave();
             router.back();
         });        
     } else {
-        orderStore.add(order.value).then(() => {
-            if (order.value.rows?.length) {
-                // updating available products count
-                productStore.refresh(order.value.rows.map(r => r.productId));
-            }
+        addOrder(order.value).then(() => {
+            viewModel.clearOrderFilters();
+            checkProductsAfterSave();
             router.back();
         });
     }
@@ -66,7 +68,7 @@ const cancel = () => {
     router.back();
 }
 
-const salePlatformsLoading = ref(true);
+const salePlatformsLoading = computed(() => salePlatformsQuery.isLoading.value);
 const editSalePlatformDisplay = ref(false);
 const onAddSalePlatformClick = () => editSalePlatformDisplay.value = true;
 const onEditSalePlatformClose = (id?: string) => {
@@ -76,11 +78,9 @@ const onEditSalePlatformClose = (id?: string) => {
     }
 }
 
-const currentSalePlatform = computed(() => salePlatforms.value.find(p => p.id === order.value.salePlatformId)?.name);
+const currentSalePlatform = computed(() => salePlatforms.value?.find(p => p.id === order.value.salePlatformId)?.name);
 
 onBeforeMount(() => {
-    salePlatformStore.init().then(() => salePlatformsLoading.value = false);
-    loadOrders();
     fillProps();
 });
 </script>
@@ -108,6 +108,7 @@ onBeforeMount(() => {
                     class="d-flex w-100 me-2"
                     id="salePlatform"
                     :loading="salePlatformsLoading"
+                    :disabled="!!order?.id || undefined"
                 />
                 <Button
                     type="button" rounded

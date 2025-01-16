@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref, watch} from "vue";
 import {makeTreeSelectNodes} from "@/types/ICategory";
-import {useCategoriesStore} from "@/stores/categories";
 import {IProduct} from "@/types/IProduct";
-import {TreeNode} from "primevue/treenode";
-import {useProductsStore} from "@/stores/products";
 import EditCategory from "../Categories/EditCategory.vue";
-const categoryStore = useCategoriesStore();
-const productStore = useProductsStore();
+import {TreeNode} from "primevue/treenode";
+import {getCategoriesQuery} from "@/services/CategoryService";
+import {addProduct, updateProduct} from "@/services/ProductService";
+import {useViewModel} from "@/stores/viewModel";
 const props = defineProps<{
     product?: IProduct,
     display: boolean,
 }>();
 const product = ref(<IProduct>{});
 const categorySelect = ref<{[key: string]: boolean}>({});
-const categories = computed(() => makeTreeSelectNodes(categoryStore.categories));
+
+const viewModel = useViewModel();
+
+const rawCategories = getCategoriesQuery().data;
+const categories = computed(() => makeTreeSelectNodes(rawCategories.value ?? []));
 
 const display = ref(false);
 const emit = defineEmits(["close"]);
@@ -58,9 +61,10 @@ const cancel = () => {
 const ok = async (event: any) => {
     event.preventDefault();
     if (editMode.value) {
-        await productStore.update(product.value);        
+        await updateProduct(product.value);        
     } else {
-        await productStore.add(product.value);
+        await addProduct(product.value);
+        viewModel.productsCurrentPage = 0;
     }
     emit("close", product.value.id);
     product.value = <IProduct>{};
@@ -80,8 +84,6 @@ const onEditCategoryClose = (id?: string) => {
 }
 
 onBeforeMount(() => {
-    categoryStore.init();
-    productStore.init();
     fillProps();
 });
 </script>

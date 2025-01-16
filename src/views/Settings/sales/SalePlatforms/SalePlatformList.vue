@@ -3,17 +3,16 @@ import {computed, onBeforeMount, Ref, ref} from 'vue';
 import {ISalePlatform} from "@/types/ISalePlatform";
 import {FilterMatchMode} from "primevue/api";
 import EditSalePlatform from "./EditSalePlatform.vue";
-import {useSalePlatformsStore} from "@/stores/salePlatforms";
+import {deleteSalePlatform, getSalePlatformsQuery} from "@/services/SalePlatformService";
 
-const salePlatformStore = useSalePlatformsStore();
-
-const salePlatforms = computed(() => salePlatformStore.salePlatforms);
+const salePlatformsQuery = getSalePlatformsQuery();
+const salePlatforms = salePlatformsQuery.data;
 
 const filters = ref({
     name: { value: null, matchMode: FilterMatchMode.CONTAINS },
     code: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
-const loading = ref(true);
+const loading = computed(() => salePlatformsQuery.isLoading.value);
 
 const currentSalePlatform = ref<ISalePlatform>();
 const editSalePlatform = ref(false);
@@ -26,16 +25,12 @@ const closeEdit = () => {
     editSalePlatform.value = false;
 }
 const deleteClick = (data: ISalePlatform) => {
-    salePlatformStore.remove(data);
+    deleteSalePlatform(data.id);
 };
 const addSalePlatform = () => {
     currentSalePlatform.value = <ISalePlatform>{};
     editSalePlatform.value = true;
 };
-
-onBeforeMount(() => {
-    salePlatformStore.init().then(() => loading.value = false);
-});
 
 </script>
 

@@ -1,7 +1,7 @@
 ﻿import type {ICategory} from "@/types/ICategory";
 import Service from "@/services/Service";
 
-export class CategoryService extends Service {
+export class CategoryApi extends Service {
     public async getAll(): Promise<ICategory[]> {
         return (await this.get<ICategory[]>('/categories')).data;
     }

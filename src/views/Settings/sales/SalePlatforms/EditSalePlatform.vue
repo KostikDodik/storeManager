@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref, watch} from "vue";
-import {useCategoriesStore} from "@/stores/categories";
 import {ISalePlatform} from "@/types/ISalePlatform";
-import {useSalePlatformsStore} from "@/stores/salePlatforms";
+import {addSalePlatform, updateSalePlatform} from "@/services/SalePlatformService";
 
-const salePlatformStore = useSalePlatformsStore();
 const props = defineProps<{
     salePlatform?: ISalePlatform,
     display: boolean,
@@ -27,7 +25,7 @@ watch(() => display.value, () => {
 });
 
 const fillProps = () => {
-    salePlatform.value = <ISalePlatform> (props.salePlatform ? { ...props.salePlatform } : {});
+    salePlatform.value = <ISalePlatform> { ...(props.salePlatform ?? {}) };
 }
 
 watch(() => props.salePlatform, fillProps);
@@ -38,15 +36,14 @@ const cancel = () => {
 const ok = async (event: any) => {
     event.preventDefault();
     if (editMode.value) {
-        await salePlatformStore.update(salePlatform.value);        
+        await updateSalePlatform(salePlatform.value);        
     } else {
-        await salePlatformStore.add(salePlatform.value);
+        await addSalePlatform(salePlatform.value);
     }    
     emit("close", salePlatform.value.id);
     salePlatform.value = <ISalePlatform>{};
 };
 onBeforeMount(() => {
-    salePlatformStore.init();
     fillProps();
 });
 </script>

@@ -1,19 +1,20 @@
 ﻿<script setup lang="ts">
-import {useProductsStore} from "@/stores/products";
 import {computed, onBeforeMount, ref} from "vue";
 import {ISupplyRow} from "@/types/ISupply";
 import {IProduct} from "@/types/IProduct";
 import EditProduct from "../Products/EditProduct.vue";
+import {getAllProductsQuery} from "@/services/ProductService";
 
-const productStore = useProductsStore();
-const products = computed(() => productStore.products);
+const productsQuery = getAllProductsQuery();
+const products = productsQuery.data;
 
 const props = defineProps<{
-    rows?: ISupplyRow[],
     deliveryDisabled: boolean
 }>();
 
-const rows = computed(() => props.rows ?? []);
+const rows = defineModel<ISupplyRow[]>("rows", {
+    required: true
+});
 const addRow = () => {
     rows.value.splice(0, 0, <ISupplyRow>{});
 }
@@ -27,7 +28,7 @@ const editProduct = ref<IProduct>();
 const currentRow = ref<ISupplyRow>();
 const addProduct = (row: ISupplyRow) => {
   currentRow.value = row;
-  editProduct.value = products.value.find(p => p.id === row.productId)
+  editProduct.value = products.value?.find(p => p.id === row.productId)
   editProductDisplay.value = true;
 };
 
@@ -42,7 +43,7 @@ const onProductModalClose = (id?: string) => {
 
 const onProductSelected = (row: ISupplyRow) => {
     if (!row.supplyPrice && row.productId) {
-        const product = products.value.find(p => p.id === row.productId);
+        const product = products.value?.find(p => p.id === row.productId);
         if (product?.buyPrice) {
             row.supplyPrice = product.buyPrice;
         }
@@ -52,14 +53,7 @@ const onProductSelected = (row: ISupplyRow) => {
     }
 }
 
-const productsLoading = ref(true);
-
-onBeforeMount(() => {
-    productStore.init().then(() => {
-        productsLoading.value = false;
-    })
-})
-
+const productsLoading = computed(() => productsQuery.isLoading.value);
 </script>
 
 <template>

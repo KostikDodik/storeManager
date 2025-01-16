@@ -1,8 +1,8 @@
-import type {ISupplier} from "@/types/ISupplier";
+﻿import type {ISupplier} from "@/types/ISupplier";
 import Service from "@/services/Service";
 
-export class SupplierService extends Service {
-    public async getAllSuppliers(): Promise<ISupplier[]> {
+export class SupplierApi extends Service {
+    public async getAll(): Promise<ISupplier[]> {
         return (await this.get<ISupplier[]>('/suppliers')).data;
     }
 

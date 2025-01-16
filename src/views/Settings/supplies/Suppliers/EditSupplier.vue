@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref, watch} from "vue";
 import {ISupplier} from "@/types/ISupplier";
-import {useSuppliersStore} from "@/stores/suppliers";
+import {addSupplier, updateSupplier} from "@/services/SupplierService";
 
-const supplierStore = useSuppliersStore();
 const props = defineProps<{
     supplier?: ISupplier,
     display: boolean,
@@ -37,15 +36,14 @@ const cancel = () => {
 const ok = async (event: any) => {
     event.preventDefault();
     if (editMode.value) {
-        await supplierStore.update(supplier.value);        
+        await updateSupplier(supplier.value);        
     } else {
-        await supplierStore.add(supplier.value);
+        await addSupplier(supplier.value);
     }    
     emit("close", supplier.value.id);
     supplier.value = <ISupplier>{};
 };
 onBeforeMount(() => {
-    supplierStore.init();
     fillProps();
 });
 </script>

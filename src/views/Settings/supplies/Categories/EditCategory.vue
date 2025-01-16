@@ -1,3 +1,61 @@
+<script setup lang="ts">
+import {computed, onBeforeMount, onMounted, ref, watch} from "vue";
+import {ICategory, makeTreeSelectNodes} from "@/types/ICategory";
+import {addCategory, getCategoriesQuery, updateCategory} from "@/services/CategoryService";
+const props = defineProps<{
+    category?: ICategory,
+    display: boolean,
+}>();
+
+const categories = getCategoriesQuery().data;
+
+const category = ref<ICategory>({});
+const parentSelect = ref<{[key: string]: boolean}>({});
+const parentCategories = computed(() => makeTreeSelectNodes(categories.value ?? []));
+
+const display = ref(false);
+const emit = defineEmits(["close"]);
+const editMode = computed(() => !!category?.value?.id)
+
+watch(() => props.display, () => {
+    display.value = props.display
+});
+
+watch(() => display.value, () => {
+    if (!display.value) {
+        emit("close");
+    }
+});
+
+const fillProps = () => {
+    category.value = <ICategory> (props.category ? { ...props.category } : {});
+    parentSelect.value = {};
+    if (props.category?.parentId) {
+        parentSelect.value[props.category.parentId] = true;
+    }
+}
+
+watch(() => props.category, fillProps);
+
+const cancel = () => {
+    emit("close");
+};
+const ok = async (event: any) => {
+    event.preventDefault();
+    category.value.parentId = Object.keys(parentSelect.value).find(key => parentSelect.value[key]);
+    if (editMode.value) {
+        await updateCategory(category.value);
+    } else {
+        await addCategory(category.value);
+    }
+    emit("close", category.value.id);
+    category.value = <ICategory>{};
+};
+onBeforeMount(() => {
+    fillProps();
+});
+</script>
+
 <template>
   <Dialog v-model:visible="display" modal :style="{width: '25rem'}" :header="editMode ? 'Редагувати категорію' : 'Нова категорія'">
     <form @submit="ok">
@@ -20,60 +78,3 @@
     </form>
   </Dialog>
 </template>
-
-<script setup lang="ts">
-import {computed, onBeforeMount, onMounted, ref, watch} from "vue";
-import {ICategory, makeTreeSelectNodes} from "@/types/ICategory";
-import {useCategoriesStore} from "@/stores/categories";
-const categoryStore = useCategoriesStore();
-const props = defineProps<{
-    category?: ICategory,
-    display: boolean,
-}>();
-const category = ref<ICategory>({});
-const parentSelect = ref<{[key: string]: boolean}>({});
-const parentCategories = computed(() => makeTreeSelectNodes(categoryStore.categories));
-
-const display = ref(false);
-const emit = defineEmits(["close"]);
-const editMode = computed(() => !!category?.value?.id)
-
-watch(() => props.display, () => {
-    display.value = props.display
-});
-
-watch(() => display.value, () => {
-    if (!display.value) {
-        emit("close");
-    }
-});
-
-const fillProps = () => {
-    category.value = <ICategory> (props.category ? { ...props.category } : {});
-    parentSelect.value = {};
-    if (props.category?.parentId) {
-        parentSelect.value[props.category.parentId] = true;
-    } 
-}
-
-watch(() => props.category, fillProps);
-
-const cancel = () => {
-    emit("close");
-};
-const ok = async (event: any) => {
-    event.preventDefault();
-    category.value.parentId = Object.keys(parentSelect.value).find(key => parentSelect.value[key]);
-    if (editMode.value) {
-        await categoryStore.update(category.value);        
-    } else {
-        await categoryStore.add(category.value);
-    }
-    emit("close", category.value.id);
-    category.value = <ICategory>{};
-};
-onBeforeMount(() => {
-    categoryStore.init();
-    fillProps();
-});
-</script>

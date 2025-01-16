@@ -1,45 +1,39 @@
 ﻿<script setup lang="ts">
-import {computed, onBeforeMount, ref} from 'vue';
-import {FilterMatchMode} from "primevue/api";
-import {useSuppliersStore} from "@/stores/suppliers";
-import {useSuppliesStore} from "@/stores/supplies";
+import {computed, ref, toRaw, watch} from 'vue';
 import {ISupplier} from "@/types/ISupplier";
 import {ISupply} from "@/types/ISupply";
 import {useRouter} from "vue-router";
-import {supplyStateDisplayName, supplyStateOptions, SupplyState} from "@/types/ISupplyState";
+import {SupplyState, supplyStateDisplayName, supplyStateOptions} from "@/types/ISupplyState";
 import {useViewModel} from "@/stores/viewModel";
 import {DataTablePageEvent} from "primevue/datatable";
 import {useConfirm} from "primevue/useconfirm";
+import {getSuppliersQuery} from "@/services/SupplierService";
+import {deleteSupply, getSuppliesQuery} from "@/services/SupplyService";
+import {getSupplyIncome} from "./calculations";
 
 interface IDisplaySupply extends ISupply {
     supplier?: ISupplier;
     stateName?: string;
 }
 
-const supplierStore = useSuppliersStore();
-const supplyStore = useSuppliesStore();
 const viewModel = useViewModel();
 const router = useRouter();
 
-const supplies = computed(() => supplyStore.supplies);
-const suppliers = computed(() => supplierStore.suppliers);
+const suppliesQuery = getSuppliesQuery();
+const supplies = suppliesQuery.data;
+
+const suppliersQuery = getSuppliersQuery();
+const suppliers = suppliersQuery.data;
+const loading = computed(() => suppliesQuery.isLoading.value || suppliesQuery.isLoading.value);
 
 const displaySupplies = computed(() => supplies.value?.map(s => {
-    const ds: IDisplaySupply = s;
+    const ds: IDisplaySupply = structuredClone(toRaw(s));
     if (s?.supplierId) {
-        ds.supplier = suppliers.value.find(sup => sup.id === s.supplierId);
+        ds.supplier = suppliers.value?.find(sup => sup.id === s.supplierId);
     }
     ds.stateName = supplyStateDisplayName(s.state);
     return ds;
 }));
-
-const filters = ref({
-    date: {value: null, matchMode: FilterMatchMode.EQUALS},
-    updatedState: {value: null, matchMode: FilterMatchMode.EQUALS},
-    supplierId: {value: null, matchMode: FilterMatchMode.EQUALS},
-    state: { value: null, matchMode: FilterMatchMode.EQUALS}
-});
-const loading = ref(true);
 
 const editClick = (data: ISupply) => {
     router.push({
@@ -62,7 +56,7 @@ const deleteClick = (data: IDisplaySupply) => {
         },
         defaultFocus: 'reject',
         accept: () => void (async(): Promise<void> => {
-            await supplyStore.remove(data);
+            await deleteSupply(data.id);
         })()
     });
 };
@@ -80,14 +74,17 @@ const rowClass = (data: string | IDisplaySupply | undefined) => {
     return [{ 'bg-success-subtle': data.state === SupplyState.SoldOut }];
 };
 
-onBeforeMount(() => {
-    supplierStore.init();
-    supplyStore.init().then(() => loading.value = false);
-});
-
 const pageChanged = (event: DataTablePageEvent) => {
     viewModel.supplyListCurrentPage = event.page;
 }
+
+const renderKey = ref(0);
+watch(supplies, () => {
+    renderKey.value++
+}, {
+    deep: true
+});
+
 </script>
 
 <template>
@@ -104,12 +101,14 @@ const pageChanged = (event: DataTablePageEvent) => {
         </div>
         <DataTable
             :value="displaySupplies"
-            v-model:filters="filters"
+            v-model:filters="viewModel.supplyFilters"
+            :key="renderKey"
             paginator
             :rows="10"
             dataKey="id"
             filterDisplay="row"
             sortMode="multiple"
+            v-model:multiSortMeta="viewModel.supplyMultiSortMeta"
             :loading="loading"
             removableSort
             stripedRows
@@ -171,7 +170,7 @@ const pageChanged = (event: DataTablePageEvent) => {
           </Column>
           <Column field="totalIncome" header="Дохід" headerStyle="width: 8rem">
             <template #body="{ data }">
-              {{ Number(supplyStore.getSupplyIncome(data)).toFixed(2) }}
+              {{ Number(getSupplyIncome(data)).toFixed(2) }}
             </template>
           </Column>
           <Column headerStyle="width: 8rem" header="Дії">

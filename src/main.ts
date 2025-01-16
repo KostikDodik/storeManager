@@ -2,8 +2,8 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js"
 import './assets/main.css';
 import '@/utilities/date';
 
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
+import {createApp} from 'vue';
+import {createPinia} from 'pinia';
 
 import App from './App.vue';
 import router from './router';
@@ -33,6 +33,7 @@ import TabPanel from 'primevue/tabpanel';
 import ConfirmationService from 'primevue/confirmationservice';
 
 import Lara from 'primevue/themes/lara';
+import {VueQueryPlugin} from "@tanstack/vue-query";
 
 const app = createApp(App)
 
@@ -60,28 +61,28 @@ app.use(PrimeVue, {
         weekHeader: "ТД"
     }
 });
-app.use(ConfirmationService);
-app.component("Button", Button);
-app.component("TreeTable", TreeTable);
-app.component("Column", Column);
-app.component("Dialog", Dialog);
-app.component("Select", Select);
-app.component("TreeSelect", TreeSelect);
-app.component("InputText", InputText);
-app.component("InputNumber", InputNumber);
-app.component("Card", Card);
-app.component("DataTable", DataTable);
-app.component("DatePicker", DatePicker);
-app.component("Menubar", Menubar);
-app.directive('tooltip', Tooltip);
-app.component("Accordion", Accordion);
-app.component("AccordionPanel", AccordionPanel);
-app.component("AccordionHeader", AccordionHeader);
-app.component("AccordionContent", AccordionContent);
-app.component("Tabs", Tabs);
-app.component("TabList", TabList);
-app.component("Tab", Tab);
-app.component("TabPanels", TabPanels);
-app.component("TabPanel", TabPanel);
-
-app.mount('#app')
+app.use(ConfirmationService)
+    .use(VueQueryPlugin)
+    .component("Button", Button)
+    .component("TreeTable", TreeTable)
+    .component("Column", Column)
+    .component("Dialog", Dialog)
+    .component("Select", Select)
+    .component("TreeSelect", TreeSelect)
+    .component("InputText", InputText)
+    .component("InputNumber", InputNumber)
+    .component("Card", Card)
+    .component("DataTable", DataTable)
+    .component("DatePicker", DatePicker)
+    .component("Menubar", Menubar)
+    .directive('tooltip', Tooltip)
+    .component("Accordion", Accordion)
+    .component("AccordionPanel", AccordionPanel)
+    .component("AccordionHeader", AccordionHeader)
+    .component("AccordionContent", AccordionContent)
+    .component("Tabs", Tabs)
+    .component("TabList", TabList)
+    .component("Tab", Tab)
+    .component("TabPanels", TabPanels)
+    .component("TabPanel", TabPanel)
+    .mount('#app')

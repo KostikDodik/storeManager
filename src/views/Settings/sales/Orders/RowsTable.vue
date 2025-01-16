@@ -1,16 +1,14 @@
 ﻿<script setup lang="ts">
-import {useProductsStore} from "@/stores/products";
 import {computed, onBeforeMount, ref, watch} from "vue";
 import {IOrderRow} from "@/types/IOrder";
+import {getAllProductsQuery} from "@/services/ProductService";
 
-const productStore = useProductsStore();
-const products = computed(() => productStore.products);
+const productsQuery = getAllProductsQuery();
+const products = productsQuery.data;
 
-const props = defineProps<{
-    rows?: IOrderRow[]
-}>();
-
-const rows = computed(() => props.rows ?? []);
+const rows = defineModel<IOrderRow[]>("rows", {
+    required: true
+});
 const initialCount = ref<{[key: string]: number}>({});
 
 const addRow = () => {
@@ -23,7 +21,7 @@ const deleteClick = (row: IOrderRow) => {
 
 const onProductSelected = (row: IOrderRow) => {
     if (!row.price && row.productId) {
-        const product = products.value.find(p => p.id === row.productId);
+        const product = products.value?.find(p => p.id === row.productId);
         if (product?.sellPrice) {
             row.price = product.sellPrice;            
         }
@@ -40,15 +38,10 @@ const fillInitialCount = () => {
     }
 }
 
-watch(() => props.rows, () => fillInitialCount());
-
-const productsLoading = ref(true);
+const productsLoading = computed(() => productsQuery.isLoading.value);
 
 onBeforeMount(() => {
     fillInitialCount();
-    productStore.refresh().then(() => {
-        productsLoading.value = false;
-    })
 });
 
 const getAvailable = (row: IOrderRow): number => {
@@ -59,7 +52,6 @@ const getAvailable = (row: IOrderRow): number => {
     const initial = initialCount.value[row.productId] ?? 0
     return initial + available;
 };
-
 
 
 </script>
@@ -83,6 +75,7 @@ const getAvailable = (row: IOrderRow): number => {
             dataKey="id"
             stripedRows
             size="small"
+            :key="rows.length"
         >
           <template #empty> Покищо немає найменувань</template>
           <Column field="productId" header="Найменування" >

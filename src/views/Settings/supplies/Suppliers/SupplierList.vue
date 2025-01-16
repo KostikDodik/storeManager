@@ -1,20 +1,19 @@
 <script setup lang="ts">
-import {computed, onBeforeMount, Ref, ref} from 'vue';
+import {computed, ref} from 'vue';
 import {ISupplier} from "@/types/ISupplier";
 import {FilterMatchMode} from "primevue/api";
 import EditSupplier from "./EditSupplier.vue";
-import {useSuppliersStore} from "@/stores/suppliers";
 import {useConfirm} from "primevue/useconfirm";
+import {deleteSupplier, getSuppliersQuery} from "@/services/SupplierService";
 
-const supplierStore = useSuppliersStore();
-
-const suppliers = computed(() => supplierStore.suppliers);
+const suppliersQuery = getSuppliersQuery();
+const suppliers = suppliersQuery.data;
+const loading = computed(() => suppliersQuery.isLoading.value);
 
 const filters = ref({
     name: { value: null, matchMode: FilterMatchMode.CONTAINS },
     code: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
-const loading = ref(true);
 
 const currentSupplier = ref<ISupplier>();
 const editSupplier = ref(false);
@@ -42,7 +41,7 @@ const deleteClick = (data: ISupplier) => {
         },
         defaultFocus: 'reject',
         accept: () => void (async(): Promise<void> => {
-            await supplierStore.remove(data);
+            await deleteSupplier(data.id);
         })()
     });
 };
@@ -50,10 +49,6 @@ const addSupplier = () => {
     currentSupplier.value = <ISupplier>{};
     editSupplier.value = true;
 };
-
-onBeforeMount(() => {
-    supplierStore.init().then(() => loading.value = false);
-});
 
 </script>
 

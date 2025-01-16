@@ -1,72 +1,73 @@
 <script setup lang="ts">
-import {computed, onBeforeMount, ref, watch} from "vue";
+import {computed, onBeforeMount, ref, toRaw, watch} from "vue";
 import {ISupply} from "@/types/ISupply";
-import {useSuppliesStore} from "@/stores/supplies";
 import {useRoute, useRouter} from "vue-router";
-import {useSuppliersStore} from "@/stores/suppliers";
 import RowsTable from "./RowsTable.vue";
 import EditSupplier from "../Suppliers/EditSupplier.vue";
-import {useProductsStore} from "@/stores/products";
 import {ISelectOption} from "@/types/ISelectOption";
 import {supplyStateOptions, SupplyState} from "@/types/ISupplyState";
+import {refreshProductsById} from "@/services/ProductService";
+import {getSuppliersQuery} from "@/services/SupplierService";
+import {addSupply, getSupplyQuery, updateSupply} from "@/services/SupplyService";
+import {useViewModel} from "@/stores/viewModel";
+import {calculateDeliveryFees, getSupplyCount, getSupplyIncome, getSupplySum} from "./calculations";
 
-const supplyStore = useSuppliesStore();
-const supplierStore = useSuppliersStore();
-const productStore = useProductsStore();
 const props = defineProps<{
     supplyId?: string
 }>();
 const route = useRoute();
+const viewModel = useViewModel();
 const supplyId = computed(() => <string>route.params.id || props.supplyId);
-const originalSupply = ref(<ISupply>{});
 
-const loadSupplies = async () => {
-    if (!supplyId.value) {
-        return;
-    }
-    originalSupply.value = await supplyStore.get(supplyId.value);
-    await supplyStore.init();
-}
-watch(() => supplyId.value, loadSupplies);
+const supplyQuery = getSupplyQuery(supplyId)
+const originalSupply = supplyQuery.data;
+
 const editMode = computed(() => !!originalSupply?.value?.id);
 
 const supply = ref(<ISupply>{});
+const supplyBeforeSave = ref(<ISupply>{});
 const fillProps = () => {
-    supply.value = <ISupply> (originalSupply.value ? { ...originalSupply.value } : {});
-    supply.value.rows = (!supply.value.rows ? [] : supply.value.rows.map(row => ({ ...row })));
+    supply.value = <ISupply>structuredClone(toRaw(originalSupply.value ?? {}));
+    supply.value.rows = supply.value.rows ?? [];
 }
 
 watch(() => supplyId.value, fillProps);
 watch(() => originalSupply.value, fillProps);
-const suppliers = computed(() => supplierStore.suppliers);
 const deliveryFeeAvailable = computed(() => supply.value.state == SupplyState.SentToUkraine || supply.value.state == SupplyState.Received);
 
 const router = useRouter();
 const updateAvailableProducts = () => {
-    if (supply.value.state === SupplyState.Received 
-      || originalSupply.value.state === SupplyState.Received) {        
-        productStore.refresh(supply.value.rows?.map(r => r.productId));
+    if (supply.value.state === SupplyState.Received || supplyBeforeSave.value.state === SupplyState.Received) {       
+        if (supply.value.rows?.length || supplyBeforeSave.value?.rows?.length) {
+            refreshProductsById([...new Set([
+                ...(supply.value.rows ?? []).map(r => r.productId),
+                ...(supplyBeforeSave.value?.rows ?? []).map(r => r.productId)
+            ])]);            
+        }
     }
 }
-const ok = (event: any) => {
+const ok = async (event: any) => {
     event.preventDefault();
+    supplyBeforeSave.value = structuredClone(toRaw(originalSupply.value ?? <ISupply>{}));
     if (editMode.value) {
-        supplyStore.update(supply.value).then(() => {
-            updateAvailableProducts();
-            router.back()
-        });        
+        await updateSupply(supply.value);
+        await supplyQuery.refetch();
+        updateAvailableProducts();
+        router.back();
     } else {
-        supplyStore.add(supply.value).then(() => {
-            updateAvailableProducts();
-            router.back();
-        });
+        await addSupply(supply.value);
+        viewModel.clearSupplyFilters();
+        updateAvailableProducts();
+        router.back();
     }
 };
 const cancel = () => {
     router.back();
 }
 
-const suppliersLoading = ref(true);
+const suppliersQuery = getSuppliersQuery();
+const suppliers = suppliersQuery.data;
+const suppliersLoading = computed(() => suppliersQuery.isLoading.value);
 const editSupplierDisplay = ref(false);
 const onAddSupplierClick = () => editSupplierDisplay.value = true;
 const onEditSupplierClose = (id?: string) => {
@@ -76,22 +77,20 @@ const onEditSupplierClose = (id?: string) => {
     }
 }
 
-const totalCount = computed(() => supplyStore.getSupplyCount(supply.value));
-const totalSum = computed(() => supplyStore.getSupplySum(supply.value));
-const totalIncome = computed(() => supplyStore.getSupplyIncome(supply.value));
+const totalCount = computed(() => getSupplyCount(supply.value));
+const totalSum = computed(() => getSupplySum(supply.value));
+const totalIncome = computed(() => getSupplyIncome(supply.value));
 
-const currentSupplier = computed(() => suppliers.value.find(s => s.id === supply.value?.supplierId)?.name);
+const currentSupplier = computed(() => suppliers.value?.find(s => s.id === supply.value?.supplierId)?.name);
 
 const onDeliveryFeeChanged = () => {
-    supplyStore.calculateDeliveryFees(supply.value);
+    calculateDeliveryFees(supply.value);
 }
 
 const stateSelectShown = ref(false);
 const optionDisabled = (data: ISelectOption) => stateSelectShown.value && !!data.disabled;
 
 onBeforeMount(() => {
-    supplierStore.init().then(() => suppliersLoading.value = false);
-    loadSupplies();
     fillProps();
 });
 
@@ -150,6 +149,7 @@ watch(() => supply.value?.deliveryFee, onDeliveryFeeChanged);
                   @before-hide="() => stateSelectShown = false"
                   placeholder="Статус" 
                   class="d-flex w-100"
+                  :disabled="!!supply.id || undefined"
               />              
             </div>
             <div class="form-group col-6">
@@ -219,7 +219,7 @@ watch(() => supply.value?.deliveryFee, onDeliveryFeeChanged);
               </AccordionContent>
             </AccordionPanel>
           </Accordion>
-          <RowsTable :delivery-disabled="!deliveryFeeAvailable" :rows="supply.rows"></RowsTable>
+          <RowsTable v-if="supply.rows" :delivery-disabled="!deliveryFeeAvailable" :rows="supply.rows"></RowsTable>
           <div class="d-flex form-group justify-content-start">
             <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" severity="warn" @click="cancel" />
             <Button icon="fa fa-check" label="Ok" class="p-button-text" type="submit" />

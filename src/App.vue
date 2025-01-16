@@ -5,6 +5,7 @@ import supplyMenuItems from "./views/Settings/supplies/menuItems";
 import orderMenuItems from "./views/Settings/sales/menuItems";
 import statisticMenuItems from "./views/Settings/statistics/menuItems";
 import ConfirmDialog from "primevue/ConfirmDialog";
+import {initQueryClient} from "@/services/queryClient";
 
 const router = useRouter();
 
@@ -23,6 +24,7 @@ onMounted(() => {
 });
 
 const items = ref([...orderMenuItems(router), ...supplyMenuItems(router), ...statisticMenuItems(router)]);
+initQueryClient();
 
 </script>
 

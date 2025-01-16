@@ -1,8 +1,8 @@
-import type {ISalePlatform} from "@/types/ISalePlatform";
+﻿import type {ISalePlatform} from "@/types/ISalePlatform";
 import Service from "@/services/Service";
 
-export class SalePlatformService extends Service {
-    public async getAllSalePlatforms(): Promise<ISalePlatform[]> {
+export class SalePlatformApi extends Service {
+    public async getAll(): Promise<ISalePlatform[]> {
         return (await this.get<ISalePlatform[]>('/salePlatforms')).data;
     }
 

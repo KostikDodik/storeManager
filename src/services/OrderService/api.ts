@@ -1,5 +1,6 @@
 import type {IOrder} from "@/types/IOrder";
 import Service from "@/services/Service";
+import {IProduct} from "@/types/IProduct";
 
 interface IRawOrder extends Omit<IOrder, 'date'|'updatedState'|'dateEdited'> {
     date: string | Date
@@ -13,12 +14,12 @@ function formatDates(raw: IRawOrder): IOrder {
     raw.dateEdited = raw.dateEdited?.formatDate();
     return <IOrder>raw;
 }
-export class OrderService extends Service {
+export class OrderApi extends Service {
     public async getAllOrders(): Promise<IOrder[]> {
         return (await this.get<IRawOrder[]>('/orders')).data.map(d => formatDates(d));
     }
 
-    public async getOrder(id: string): Promise<IOrder> {
+    public async getOrder(id?: string): Promise<IOrder> {
         return formatDates((await this.get<IRawOrder>(`/orders/${id}`)).data);
     }
 
@@ -30,7 +31,7 @@ export class OrderService extends Service {
         return formatDates((await this.put<IRawOrder>(`/orders`, order)).data);
     }
 
-    public async deleteOrder(id: string): Promise<void> {
-        await this.delete(`/orders/${id}`);
+    public async deleteOrder(id: string): Promise<IProduct[]> {
+        return (await this.delete<IProduct[]>(`/orders/${id}`)).data;
     }
 }

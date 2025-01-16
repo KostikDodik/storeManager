@@ -1,5 +1,6 @@
 import type {ISupply} from "@/types/ISupply";
 import Service from "@/services/Service";
+import {IProduct} from "@/types/IProduct";
 
 interface IRawSupply extends Omit<ISupply, 'date'|'updatedState'|'dateEdited'> {
     date: string | Date
@@ -12,12 +13,12 @@ function formatDates(raw: IRawSupply): ISupply {
     raw.dateEdited = raw.dateEdited?.formatDate();
     return <ISupply>raw;
 }
-export class SupplyService extends Service {
+export class SupplyApi extends Service {
     public async getAllSupplies(): Promise<ISupply[]> {
         return (await this.get<IRawSupply[]>('/supplies')).data.map(d => formatDates(d));
     }
 
-    public async getSupply(id: string): Promise<ISupply> {
+    public async getSupply(id?: string): Promise<ISupply> {
         return formatDates((await this.get<IRawSupply>(`/supplies/${id}`)).data);
     }
 
@@ -29,7 +30,10 @@ export class SupplyService extends Service {
         return formatDates((await this.put<IRawSupply>(`/supplies`, supply)).data);
     }
 
-    public async deleteSupply(id: string): Promise<void> {
-        await this.delete(`/supplies/${id}`);
+    /*
+    * Returns updated available products
+    */
+    public async deleteSupply(id: string): Promise<IProduct[]> {
+        return (await this.delete<IProduct[]>(`/supplies/${id}`)).data;
     }
 }

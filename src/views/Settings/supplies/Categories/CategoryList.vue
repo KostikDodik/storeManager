@@ -1,13 +1,12 @@
 ﻿<script setup lang="ts">
 import {computed, onBeforeMount, ref} from 'vue';
-import {useCategoriesStore} from "@/stores/categories";
 import {makeTreeNodes} from "@/types/ITreeNode";
 import {ICategory} from "@/types/ICategory";
 import EditCategory from './EditCategory.vue';
 import {useConfirm} from "primevue/useconfirm";
+import {deleteCategory, getCategoriesQuery} from "@/services/CategoryService";
 
-const categoryStore = useCategoriesStore();
-const categories = computed(() => categoryStore.categories);
+const categories = getCategoriesQuery().data;
 const categoryTree = computed(() => makeTreeNodes<ICategory>(categories.value))
 
 const currentCategory = ref<ICategory>();
@@ -36,7 +35,7 @@ const deleteClick = (data: ICategory) => {
         },
         defaultFocus: 'reject',
         accept: () => void (async(): Promise<void> => {
-            await categoryStore.remove(data);
+            await deleteCategory(data.id);
         })()
     });    
 };
@@ -44,8 +43,6 @@ const addChild = (data?: ICategory) => {
     currentCategory.value = <ICategory>{ parentId: data?.id };
     editCategory.value = true;
 };
-
-onBeforeMount(() => categoryStore.init());
 
 </script>
 
