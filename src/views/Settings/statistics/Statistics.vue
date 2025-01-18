@@ -4,7 +4,9 @@ import {ITreeNode} from "@/types/ITreeNode";
 import {useStatisticsStore} from "@/stores/statistics";
 import {ISalesByCategory} from '@/types/ISalesByProduct';
 import {ISupplyStats} from '@/types/ISupplyStats';
+import {getCategoriesQuery} from "@/services/CategoryService";
 
+const categoriesQuery = getCategoriesQuery();
 const statisticsStore = useStatisticsStore();
 const salesByCategory = ref<ITreeNode<ISalesByCategory>[]>();
 const supplyStats = ref<ISupplyStats>();
@@ -15,12 +17,16 @@ const summarySales = computed(() => salesByCategory.value
 
 const month = ref<Date>();
 const loadStatistics = () => {
+    if (!categoriesQuery.data?.value) {
+        return;
+    }
     let start = month.value;
     let end = !month.value ? undefined : new Date(month.value?.getFullYear(), month.value.getMonth() + 1, 1);
     statisticsStore.getSaleStatistics(start, end).then(res => salesByCategory.value = res);
     statisticsStore.getSupplyStatistics(start, end).then(res => supplyStats.value = res);
 }
 watch(() => month.value, () => loadStatistics());
+watch(() => categoriesQuery.data.value, () => loadStatistics())
 onBeforeMount(() => loadStatistics());
 
 </script>

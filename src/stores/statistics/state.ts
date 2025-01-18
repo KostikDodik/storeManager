@@ -7,7 +7,7 @@ import {ISupplyStats} from "@/types/ISupplyStats";
 export interface IStatisticsState {
     raw: Ref<ISalesByProductCache>,
     formated: Ref<ISalesByCategoryCache>,
-    categories: ComputedRef<ICategory[]>,
+    categories: ComputedRef<ICategory[] | undefined>,
     supplyStats: Ref<ISupplyStatsCache>
 }
 

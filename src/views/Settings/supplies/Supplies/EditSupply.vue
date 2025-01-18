@@ -121,6 +121,7 @@ watch(() => supply.value?.deliveryFee, onDeliveryFeeChanged);
                     class="d-flex w-100 me-2"
                     id="supplier"
                     :loading="suppliersLoading"
+                    :disabled="!!supply.id || undefined"
                 />
                 <Button
                     type="button" rounded
@@ -149,7 +150,6 @@ watch(() => supply.value?.deliveryFee, onDeliveryFeeChanged);
                   @before-hide="() => stateSelectShown = false"
                   placeholder="Статус" 
                   class="d-flex w-100"
-                  :disabled="!!supply.id || undefined"
               />              
             </div>
             <div class="form-group col-6">
