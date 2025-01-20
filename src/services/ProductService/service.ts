@@ -65,6 +65,7 @@ export const getProductQuery = (id: Ref<string|undefined>) =>  useQuery({
 export const addProduct = async (product: IProduct) => {
     const saved = await api.addProduct(product);
     await refreshProductsById([saved.id]);
+    return saved;
 }
 
 export const updateProduct = async(product: IProduct): Promise<IProduct> => {

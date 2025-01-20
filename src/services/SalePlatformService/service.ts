@@ -12,8 +12,9 @@ export const getSalePlatformsQuery = () => useQuery({
 });
 
 export const addSalePlatform = async (salePlatform: ISalePlatform) => {
-    await api.addSalePlatform(salePlatform);
+    const res = await api.addSalePlatform(salePlatform);
     await getQueryClient().refetchQueries({ queryKey: ['allSalePlatforms']});
+    return res
 }
 
 export const updateSalePlatform = async(salePlatform: ISalePlatform): Promise<ISalePlatform> => {

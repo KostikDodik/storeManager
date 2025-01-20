@@ -60,13 +60,14 @@ const cancel = () => {
 };
 const ok = async (event: any) => {
     event.preventDefault();
+    let res: IProduct;
     if (editMode.value) {
-        await updateProduct(product.value);        
+        res = await updateProduct(product.value);        
     } else {
-        await addProduct(product.value);
+        res = await addProduct(product.value);
         viewModel.productsCurrentPage = 0;
     }
-    emit("close", product.value.id);
+    emit("close", res.id);
     product.value = <IProduct>{};
 };
 

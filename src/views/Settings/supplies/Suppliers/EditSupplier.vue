@@ -35,12 +35,13 @@ const cancel = () => {
 };
 const ok = async (event: any) => {
     event.preventDefault();
+    let res: ISupplier;
     if (editMode.value) {
-        await updateSupplier(supplier.value);        
+        res = await updateSupplier(supplier.value);        
     } else {
-        await addSupplier(supplier.value);
+        res = await addSupplier(supplier.value);
     }    
-    emit("close", supplier.value.id);
+    emit("close", res.id);
     supplier.value = <ISupplier>{};
 };
 onBeforeMount(() => {

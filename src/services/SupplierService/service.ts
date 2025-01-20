@@ -13,8 +13,9 @@ export const getSuppliersQuery = () => useQuery({
 });
 
 export const addSupplier = async (supplier: ISupplier) => {
-    await api.addSupplier(supplier);    
+    const res = await api.addSupplier(supplier);    
     await getQueryClient().refetchQueries({ queryKey: ['allSuppliers']});
+    return res;
 }
 
 export const updateSupplier = async(supplier: ISupplier): Promise<ISupplier> => {

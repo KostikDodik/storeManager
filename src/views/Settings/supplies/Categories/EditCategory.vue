@@ -43,12 +43,13 @@ const cancel = () => {
 const ok = async (event: any) => {
     event.preventDefault();
     category.value.parentId = Object.keys(parentSelect.value).find(key => parentSelect.value[key]);
+    let res: ICategory;
     if (editMode.value) {
-        await updateCategory(category.value);
+        res = await updateCategory(category.value);
     } else {
-        await addCategory(category.value);
+        res = await addCategory(category.value);
     }
-    emit("close", category.value.id);
+    emit("close", res.id);
     category.value = <ICategory>{};
 };
 onBeforeMount(() => {

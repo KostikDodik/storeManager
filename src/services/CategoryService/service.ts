@@ -12,8 +12,9 @@ export const getCategoriesQuery = () => useQuery({
 });
 
 export const addCategory = async (category: ICategory) => {
-    await api.addCategory(category);
+    const res = await api.addCategory(category);
     await getQueryClient().refetchQueries({ queryKey: ['allCategories']});
+    return res;
 }
 
 export const updateCategory = async(category: ICategory): Promise<ICategory> => {

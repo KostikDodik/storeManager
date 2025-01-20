@@ -35,12 +35,13 @@ const cancel = () => {
 };
 const ok = async (event: any) => {
     event.preventDefault();
+    let res: ISalePlatform;
     if (editMode.value) {
-        await updateSalePlatform(salePlatform.value);        
+        res = await updateSalePlatform(salePlatform.value);        
     } else {
-        await addSalePlatform(salePlatform.value);
+        res = await addSalePlatform(salePlatform.value);
     }    
-    emit("close", salePlatform.value.id);
+    emit("close", res.id);
     salePlatform.value = <ISalePlatform>{};
 };
 onBeforeMount(() => {
