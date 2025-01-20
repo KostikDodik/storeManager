@@ -21,8 +21,9 @@ export const getSupplyQuery = (id: Ref<string|undefined>) =>  useQuery({
 });
 
 export const addSupply = async (supply: ISupply) => {
-    await api.addSupply(supply);
+    const data = await api.addSupply(supply);
     await getQueryClient().refetchQueries({ queryKey: ['supplies', 'all']});
+    return data;
 }
 
 export const updateSupply = async(supply: ISupply): Promise<ISupply> => {

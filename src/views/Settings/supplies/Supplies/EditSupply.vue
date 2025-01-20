@@ -11,6 +11,8 @@ import {getSuppliersQuery} from "@/services/SupplierService";
 import {addSupply, getSupplyQuery, updateSupply} from "@/services/SupplyService";
 import {useViewModel} from "@/stores/viewModel";
 import {calculateDeliveryFees, getSupplyCount, getSupplyIncome, getSupplySum} from "./calculations";
+import {useConfirm} from "primevue/useconfirm";
+import SupplyItemsDialog from "@/views/Settings/supplies/Items/SupplyItemsDialog.vue";
 
 const props = defineProps<{
     supplyId?: string
@@ -49,18 +51,46 @@ const updateAvailableProducts = () => {
 const ok = async (event: any) => {
     event.preventDefault();
     supplyBeforeSave.value = structuredClone(toRaw(originalSupply.value ?? <ISupply>{}));
+    let editedSupply: ISupply;
     if (editMode.value) {
-        await updateSupply(supply.value);
+        editedSupply = await updateSupply(supply.value);
         await supplyQuery.refetch();
-        updateAvailableProducts();
-        router.back();
     } else {
-        await addSupply(supply.value);
+        editedSupply = await addSupply(supply.value);
         viewModel.clearSupplyFilters();
-        updateAvailableProducts();
-        router.back();
     }
+    updateAvailableProducts();
+    setBBDate(editedSupply.id);
 };
+
+const confirm = useConfirm();
+const setBBDate = (id: string) => {
+    if (supply.value.state !== SupplyState.Received) {
+        cancel();
+        return;
+    }
+    confirm.require({
+        message: `Бажаєте заповнити терміни придатності для отриманих одиниць товарів зараз?`,
+        header: "Заповнити терміни придатності?",
+        icon: 'fa fa-circle-question',
+        rejectProps: {
+            label: "Ні, зроблю потім",
+            severity: "warn"
+        },
+        acceptProps: {
+            label: "Так",
+            severity: "success"
+        },
+        defaultFocus: 'accept',
+        accept: () => {
+            supplyIdForItemsDialog.value = id;
+        },
+        reject: () => {
+            cancel();
+        }
+    });
+}
+
 const cancel = () => {
     router.back();
 }
@@ -95,6 +125,13 @@ onBeforeMount(() => {
 });
 
 watch(() => supply.value?.deliveryFee, onDeliveryFeeChanged);
+
+
+const supplyIdForItemsDialog = ref<string>();
+const closeItemsDialog = () => {
+    supplyIdForItemsDialog.value = undefined;
+    cancel();
+}
 
 </script>
 
@@ -228,5 +265,6 @@ watch(() => supply.value?.deliveryFee, onDeliveryFeeChanged);
       </template>
     </Card>
     <EditSupplier :display="editSupplierDisplay" @close="onEditSupplierClose"></EditSupplier>
+    <SupplyItemsDialog :supply-id="supplyIdForItemsDialog" @close="closeItemsDialog"/>
   </div>
 </template>

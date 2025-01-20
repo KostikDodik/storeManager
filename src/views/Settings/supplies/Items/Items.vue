@@ -2,20 +2,26 @@
 import Paginator from "primevue/paginator"
 import {useViewModel} from "@/stores/viewModel";
 import {computed, ref, toRaw, watch} from "vue";
-import {getItemCountQuery, getItemPageQuery} from "@/services/ItemsService";
+import {getItemCountQuery, getItemPageQuery, getItemsForSupplyQuery} from "@/services/ItemsService";
 import {getAllProductsQuery} from "@/services/ProductService";
 import {getOrdersQuery} from "@/services/OrderService";
 import {getSuppliesQuery} from "@/services/SupplyService";
 import {IItem} from "@/types/IItem";
-import EditProduct from "@/views/Settings/supplies/Products/EditProduct.vue";
+import EditProduct from "../Products/EditProduct.vue";
 import {IProduct} from "@/types/IProduct";
 import {getSuppliersQuery} from "@/services/SupplierService";
 import {getSalePlatformsQuery} from "@/services/SalePlatformService";
 import {IDisplayOrder} from "@/types/IOrder";
 import {IDisplaySupply} from "@/types/ISupply";
 import {useRouter} from "vue-router";
+import {twoDigits} from "@/utilities/date";
+import BBDateDialog from "./BBDateDialog.vue";
 
 const viewModel = useViewModel();
+
+const props = defineProps<{ supplyId?: string }>();
+const supplyMode = computed(() => !!props.supplyId);
+const supplyId = computed(() => props.supplyId);
 
 const available = computed(() => viewModel.itemListOnlyAvailable);
 const productId = computed(() => viewModel.itemListProductId);
@@ -29,14 +35,22 @@ const ordersQuery = getOrdersQuery();
 const suppliesQuery = getSuppliesQuery();
 const suppliersQuery = getSuppliersQuery();
 const salePlatformsQuery = getSalePlatformsQuery();
+const itemsForSupplyQuery = getItemsForSupplyQuery(supplyId);
 
 const count = countQuery.data;
 const rawPage = rawPageQuery.data;
+const supplyItems = itemsForSupplyQuery.data;
 const products = productsQuery.data;
 const suppliers = suppliersQuery.data;
 const salePlatforms = salePlatformsQuery.data;
 const rawOrders = ordersQuery.data;
 const rawSupplies = suppliesQuery.data;
+
+const currentPage = computed(() => (supplyMode.value ? supplyItems.value : rawPage.value)?.map(rp => Object.assign(structuredClone(toRaw(rp)), {
+    product: products.value?.find(p => p.id === rp.productId),
+    order: orders.value?.find(o => o.id === rp.orderId),
+    supply: supplies.value?.find(sup => sup.id === rp.supplyId)
+})));
 
 const loading = computed(() => countQuery.isLoading.value || rawPageQuery.isLoading.value || productsQuery.isLoading.value || ordersQuery.isLoading.value 
     || suppliesQuery.isLoading.value || suppliersQuery.isLoading.value || salePlatformsQuery.isLoading.value
@@ -48,12 +62,6 @@ const orders = computed(() => rawOrders.value?.map(ro => <IDisplayOrder>Object.a
 })));
 const supplies = computed(() => rawSupplies.value?.map(rs => <IDisplaySupply>Object.assign(structuredClone(toRaw(rs)), {
     supplier: suppliers.value?.find(s => s.id === rs.supplierId)
-})));
-
-const page = computed(() => rawPage.value?.map(rp => Object.assign(structuredClone(toRaw(rp)), {
-    product: products.value?.find(p => p.id === rp.productId),
-    order: orders.value?.find(o => o.id === rp.orderId),
-    supply: supplies.value?.find(sup => sup.id === rp.supplyId)
 })));
 
 const pageNumberChanged = ({page}: { page: number }) => {
@@ -87,7 +95,7 @@ const availableFilterText = computed(() => available.value !== undefined
     ? available.value ? "В наявності" : "Продані" 
     : "Всі товари");
 
-watch([available, productId], () => {
+watch([available, productId, sortOrder], () => {
     viewModel.itemListCurrentPage = 0;
 })
 const changeAvailableFilter = () => {
@@ -104,6 +112,18 @@ const statusHeaderClick = () => {
     viewModel.itemListOrder = viewModel.itemListOrder === 2 ? 3 : 2;
 }
 
+const bbdHeaderClick = () => {
+    viewModel.itemListOrder = viewModel.itemListOrder === 4 ? 5 : 4;    
+}
+
+const selectedItems = ref<IItem[]>();
+const editItems = ref<IItem[]>();
+const onItemModalClose = () => {
+    editItems.value = undefined;
+}
+const changeBBDate = (item: IItem) => {
+    editItems.value = [...new Set([...(selectedItems.value ?? []), item])];
+}
 </script>
 
 <template>
@@ -116,14 +136,21 @@ const statusHeaderClick = () => {
       </template>
       <template #content>
         <DataTable
-          :value="page"
+          :value="currentPage"
           dataKey="id"
           filterDisplay="row"
           :loading="loading"
           stripedRows
+          :size="supplyMode ? 'small' : undefined"
+          v-model:selection="selectedItems"
         >
-          <Column field="productId" header="Найменування" :show-filter-menu="false">
-            <template #filter>
+          <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+          <Column 
+            field="productId" 
+            header="Найменування" 
+            :show-filter-menu="false"
+          >
+            <template #filter v-if="!supplyMode">
               <div class="d-flex justify-content-between">
                 <Select
                   v-model="viewModel.itemListProductId"
@@ -158,6 +185,7 @@ const statusHeaderClick = () => {
               <a @click="() => goToProduct(data)" href="#">{{ data.product?.name }}</a>
             </template>
           </Column>
+          <template v-if="!supplyMode">            
           <Column field="supplyId" header="Поставка" body-style="width: 12rem;">
             <template #body="{ data } : { data: IItem }">
               <a @click="event => goToSupply(event, data)" :href="`/supplies/${data.supplyId}`">{{ data.supply?.supplier?.name }} №{{data.supply?.number}}</a>
@@ -209,7 +237,28 @@ const statusHeaderClick = () => {
               {{ data.updatedStatus?.toUaTimeString() }}
             </template>
           </Column>
-          <template #footer>
+          </template>
+          <Column field="bbDate" body-style="width: 10rem">
+            <template #header v-if="!supplyMode">
+              <div @click="bbdHeaderClick">
+                <b>Вжити до</b>
+                <i v-show="sortOrder === 4" class="ms-1 fa fa-arrow-up-wide-short"></i>
+                <i v-show="sortOrder === 5" class="ms-1 fa fa-arrow-down-short-wide"></i>
+              </div>
+            </template>
+            <template #body="{ data } : { data: IItem }">              
+              <Button 
+                class="w-100 p-1"
+                :severity="data.bbDate ? 'success' : 'info'"
+                type="button"
+                @click="changeBBDate(data)"
+              >
+                <span v-if="data.bbDate">{{twoDigits(data.bbDate?.getMonth() + 1)}}/{{data.bbDate?.getFullYear()}}</span>
+                <span v-else>Вказати термін</span>
+              </Button>
+            </template>
+          </Column>
+          <template #footer v-if="!supplyMode">
             <paginator
               :rows="10"
               :total-records="count"
@@ -223,5 +272,6 @@ const statusHeaderClick = () => {
       </template>
     </Card>
     <EditProduct :display="!!editProduct" @close="onProductModalClose" :product="editProduct"></EditProduct>
+    <BBDateDialog :items="editItems" @close="onItemModalClose" />
   </div>
 </template>

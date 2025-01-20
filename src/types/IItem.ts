@@ -7,6 +7,7 @@ export interface IItem {
     id: string;
     updatedStatus: Date;
     receivedDate: Date;
+    bbDate: Date;
     productId: string;
     product?: IProduct;
     supplyId: string;

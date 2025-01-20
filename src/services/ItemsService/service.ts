@@ -19,3 +19,15 @@ export const getItemCountQuery = (productId: Ref<string|undefined>, onlyAvailabl
 export const invalidateItemPages = async () => {
     await getQueryClient().invalidateQueries({ queryKey: ["items"], exact: false });
 }
+
+export const updateBBDate = async (itemIds: string[], bbDate: Date) => {
+    await api.updateBBdate(itemIds, bbDate);
+    await invalidateItemPages();
+}
+
+export const getItemsForSupplyQuery = (supplyId: Ref<string|undefined>) => useQuery({
+    queryKey: ['items', 'supply', supplyId],
+    staleTime: Infinity,
+    queryFn: () => api.forSupply(<string>supplyId.value),
+    enabled: () => !!supplyId.value
+})
