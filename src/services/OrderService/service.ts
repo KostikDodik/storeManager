@@ -1,9 +1,9 @@
 import {OrderApi} from "./api";
-import {QueryClient, useQuery, useQueryClient, UseQueryReturnType} from "@tanstack/vue-query";
+import {useQuery} from "@tanstack/vue-query";
 import {IOrder} from "@/types/IOrder";
 import {Ref} from "vue";
-import {refreshProducts} from "@/services/ProductService";
-import {getQueryClient} from "@/services/queryClient";
+import {refreshProducts} from "../ProductService";
+import {getQueryClient} from "../queryClient";
 
 const api = new OrderApi();
 
@@ -19,9 +19,11 @@ export const getOrderQuery = (id: Ref<string|undefined>) => useQuery({
     enabled: () => !!id.value
 });
 
+
 export const addOrder = async (order: IOrder) => {
     await api.addOrder(order);
-    await getQueryClient().refetchQueries({ queryKey: ['allOrders']});
+    const client = getQueryClient();
+    await client.refetchQueries({ queryKey: ['allOrders']});
 }
 
 export const updateOrder = async(order: IOrder): Promise<IOrder> => {

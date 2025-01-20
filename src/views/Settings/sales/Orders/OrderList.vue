@@ -1,23 +1,15 @@
 ﻿<script setup lang="ts">
-import {computed, onBeforeMount, Ref, ref, toRaw, watch} from 'vue';
-import {FilterMatchMode} from "primevue/api";
-import {ISalePlatform} from "@/types/ISalePlatform";
-import {IOrder} from "@/types/IOrder";
+import {computed, ref, toRaw} from 'vue';
+import {IDisplayOrder, IOrder} from "@/types/IOrder";
 import {useRouter} from "vue-router";
 import {useViewModel} from "@/stores/viewModel";
-import {DataTableFilterMeta, DataTablePageEvent} from "primevue/datatable";
+import {DataTablePageEvent} from "primevue/datatable";
 import {itemStateDisplayName, itemStateOptions} from "@/types/IItemState";
 import {useConfirm} from "primevue/useconfirm";
 import {ISupply} from "@/types/ISupply";
 import {deleteOrder, getOrdersQuery} from "@/services/OrderService";
 import {refreshProductsById} from "@/services/ProductService";
 import {getSalePlatformsQuery} from "@/services/SalePlatformService";
-
-interface IDisplayOrder extends IOrder {
-    salePlatform?: ISalePlatform;
-    stateName?: string;
-    edited: Date;
-}
 
 const viewModel = useViewModel();
 const router = useRouter();

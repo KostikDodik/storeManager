@@ -1,4 +1,5 @@
 import {SupplyState} from "@/types/ISupplyState";
+import {ISupplier} from "@/types/ISupplier";
 
 export interface ISupplyRow {
     id: string;
@@ -26,4 +27,9 @@ export interface ISupply {
     soldMoney?: number;
     totalIncome?: number;
     rows?: ISupplyRow[];
+}
+
+export interface IDisplaySupply extends ISupply {
+    supplier?: ISupplier;
+    stateName?: string;
 }

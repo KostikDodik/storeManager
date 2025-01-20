@@ -1,4 +1,4 @@
-﻿import {MenuItem} from "primevue/menuitem";
+﻿import {MenuItem, MenuItemCommandEvent} from "primevue/menuitem";
 import {Router} from "vue-router";
 
 export default function menuItems(router: Router) : MenuItem[] {
@@ -47,6 +47,15 @@ export default function menuItems(router: Router) : MenuItem[] {
                         router.push({
                             name: "settings.categories"
                         });
+                    }
+                }, 
+                {
+                    label: "Одиниці товарів",
+                    icon: "fa fa-list",
+                    command: () => {
+                        router.push({
+                            name: "items"
+                        });                        
                     }
                 }
             ]

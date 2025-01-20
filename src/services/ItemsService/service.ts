@@ -1,0 +1,21 @@
+import {ItemApi} from "./api";
+import {useQuery} from "@tanstack/vue-query";
+import {Ref} from "vue";
+import {getQueryClient} from "../queryClient";
+
+const api = new ItemApi();
+
+export const getItemPageQuery = (productId: Ref<string|undefined>, onlyAvailable: Ref<boolean|undefined>, sortOrder: Ref<number|undefined>, page: Ref<number|undefined>) => useQuery({
+    queryKey: ['items', 'page', productId, onlyAvailable, sortOrder, page],
+    staleTime: Infinity,
+    queryFn: () => api.getPage(productId.value, onlyAvailable.value, sortOrder.value, page.value)
+});
+export const getItemCountQuery = (productId: Ref<string|undefined>, onlyAvailable: Ref<boolean|undefined>) => useQuery({
+    queryKey: ['items', 'count', productId, onlyAvailable],
+    staleTime: Infinity,
+    queryFn: () => api.getCount(productId.value, onlyAvailable.value)
+});
+
+export const invalidateItemPages = async () => {
+    await getQueryClient().invalidateQueries({ queryKey: ["items"], exact: false });
+}

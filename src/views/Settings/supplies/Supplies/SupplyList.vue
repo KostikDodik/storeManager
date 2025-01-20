@@ -1,7 +1,6 @@
 ﻿<script setup lang="ts">
 import {computed, ref, toRaw, watch} from 'vue';
-import {ISupplier} from "@/types/ISupplier";
-import {ISupply} from "@/types/ISupply";
+import {IDisplaySupply, ISupply} from "@/types/ISupply";
 import {useRouter} from "vue-router";
 import {SupplyState, supplyStateDisplayName, supplyStateOptions} from "@/types/ISupplyState";
 import {useViewModel} from "@/stores/viewModel";
@@ -10,11 +9,6 @@ import {useConfirm} from "primevue/useconfirm";
 import {getSuppliersQuery} from "@/services/SupplierService";
 import {deleteSupply, getSuppliesQuery} from "@/services/SupplyService";
 import {getSupplyIncome} from "./calculations";
-
-interface IDisplaySupply extends ISupply {
-    supplier?: ISupplier;
-    stateName?: string;
-}
 
 const viewModel = useViewModel();
 const router = useRouter();

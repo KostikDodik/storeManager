@@ -1,4 +1,5 @@
 ﻿import {ItemState} from "@/types/IItemState";
+import {ISalePlatform} from "@/types/ISalePlatform";
 
 export interface IOrder {
   id: string;
@@ -19,4 +20,10 @@ export interface IOrderRow {
   productId: string;
   quantity: number;
   price: number;
+}
+
+export interface IDisplayOrder extends IOrder {
+  salePlatform?: ISalePlatform;
+  stateName?: string;
+  edited: Date;
 }

@@ -1,5 +1,6 @@
 ﻿import SupplyList from "./Supplies/SupplyList.vue";
 import EditSupply from "./Supplies/EditSupply.vue";
+import Items from "@/views/Settings/supplies/Products/Items.vue";
 
 const routes = [
     {
@@ -38,6 +39,11 @@ const routes = [
                 component: EditSupply
             }
         ]
+    },
+    {
+        path: '/items',
+        name: 'items',
+        component: Items
     }
 ];
 

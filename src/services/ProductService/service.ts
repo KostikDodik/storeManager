@@ -1,8 +1,9 @@
 import {ProductService} from "./api";
-import {useQuery, UseQueryReturnType} from "@tanstack/vue-query";
+import {useQuery} from "@tanstack/vue-query";
 import {IProduct} from "@/types/IProduct";
 import {ref, Ref} from "vue";
-import {getQueryClient} from "@/services/queryClient";
+import {getQueryClient} from "../queryClient";
+import {invalidateItemPages} from "../ItemsService";
 
 const api = new ProductService();
 
@@ -24,6 +25,7 @@ export const getAllProductsQuery = () =>  useQuery({
 });
 
 export const refreshProducts = async(products: IProduct[]) => {
+    invalidateItemPages();
     if (!availableProducts) {
         return;
     }
@@ -44,6 +46,7 @@ export const refreshProductsById = async(ids?: string[]) => {
     }
     if (!ids || !availableProducts.value?.length) {
         availableProducts.value = await getAvailableProducts(true);
+        invalidateItemPages();
         await getQueryClient().refetchQueries({ queryKey: ['products', 'all']});
         return;
     }
