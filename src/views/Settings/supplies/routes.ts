@@ -1,6 +1,6 @@
 ﻿import SupplyList from "./Supplies/SupplyList.vue";
 import EditSupply from "./Supplies/EditSupply.vue";
-import Items from "@/views/Settings/supplies/Items/Items.vue";
+import ItemsPage from "./Items/ItemsPage.vue";
 
 const routes = [
     {
@@ -43,7 +43,7 @@ const routes = [
     {
         path: '/items',
         name: 'items',
-        component: Items
+        component: ItemsPage
     }
 ];
 
