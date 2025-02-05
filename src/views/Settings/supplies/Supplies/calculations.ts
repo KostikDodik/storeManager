@@ -1,6 +1,6 @@
-import type {ISupply} from "@/types/ISupply";
+import type {ISupply, IDetailedSupply} from "@/types/ISupply";
 
-export function calculateDeliveryFees(supply: ISupply) {
+export function calculateDeliveryFees(supply: ISupply | IDetailedSupply) {
     if (!supply?.rows || !supply.deliveryFee) {
         return;
     }
@@ -17,18 +17,18 @@ export function calculateDeliveryFees(supply: ISupply) {
     });
 }
 
-export function getSupplySum(supply: ISupply): number {
+export function getSupplySum(supply: ISupply | IDetailedSupply): number {
     return supply?.rows?.reduce((partialSum, row) => partialSum + row.count * row.supplyPrice, 0) ?? 0;
 }
 
-export function getSupplyDeliveryFee(supply: ISupply): number {
+export function getSupplyDeliveryFee(supply: ISupply | IDetailedSupply): number {
     return supply?.rows?.reduce((partialSum, row) => partialSum + row.count * row.deliveryPrice, 0) ?? 0;
 }
 
-export function getSupplyCount(supply: ISupply): number {
+export function getSupplyCount(supply: ISupply | IDetailedSupply): number {
     return supply?.rows?.reduce((partialSum, row) => partialSum + row.count, 0) ?? 0;
 }
 
-export function getSupplyIncome(supply: ISupply): number {
+export function getSupplyIncome(supply: ISupply | IDetailedSupply): number {
     return (supply?.soldMoney ?? 0) - getSupplySum(supply) - getSupplyDeliveryFee(supply);
 }

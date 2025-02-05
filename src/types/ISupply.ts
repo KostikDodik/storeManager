@@ -29,7 +29,19 @@ export interface ISupply {
     rows?: ISupplyRow[];
 }
 
-export interface IDisplaySupply extends ISupply {
+interface IDisplayProps {
     supplier?: ISupplier;
-    stateName?: string;
+    stateName?: string;    
 }
+
+export interface IDisplaySupply extends ISupply, IDisplayProps { }
+
+export interface IDetailedRow extends ISupplyRow {
+    inStock: number;
+}
+
+export interface IDetailedSupply extends Omit<ISupply, 'rows'> {
+    rows: IDetailedRow[];
+}
+
+export interface IDetailedDisplaySupply extends IDetailedSupply, IDisplayProps { }

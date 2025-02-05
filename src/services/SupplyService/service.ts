@@ -1,6 +1,6 @@
 import {SupplyApi} from "./api";
 import {useQuery} from "@tanstack/vue-query";
-import {ISupply} from "@/types/ISupply";
+import {IDetailedSupply, ISupply} from "@/types/ISupply";
 import {Ref} from "vue";
 import {refreshProducts} from "@/services/ProductService";
 import {getQueryClient} from "@/services/queryClient";
@@ -20,13 +20,13 @@ export const getSupplyQuery = (id: Ref<string|undefined>) =>  useQuery({
     enabled: () => !!id.value
 });
 
-export const addSupply = async (supply: ISupply) => {
+export const addSupply = async (supply: ISupply): Promise<IDetailedSupply> => {
     const data = await api.addSupply(supply);
     await getQueryClient().refetchQueries({ queryKey: ['supplies', 'all']});
     return data;
 }
 
-export const updateSupply = async(supply: ISupply): Promise<ISupply> => {
+export const updateSupply = async(supply: ISupply): Promise<IDetailedSupply> => {
     const data = await api.updateSupply(supply);
     await getQueryClient().refetchQueries({ queryKey: ['supplies', 'all']});
     return data;

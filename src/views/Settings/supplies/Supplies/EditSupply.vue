@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, onBeforeMount, ref, toRaw, watch} from "vue";
-import {ISupply} from "@/types/ISupply";
+import {IDetailedSupply} from "@/types/ISupply";
 import {useRoute, useRouter} from "vue-router";
 import RowsTable from "./RowsTable.vue";
 import EditSupplier from "../Suppliers/EditSupplier.vue";
@@ -10,7 +10,7 @@ import {refreshProductsById} from "@/services/ProductService";
 import {getSuppliersQuery} from "@/services/SupplierService";
 import {addSupply, getSupplyQuery, updateSupply} from "@/services/SupplyService";
 import {useViewModel} from "@/stores/viewModel";
-import {calculateDeliveryFees, getSupplyCount, getSupplyIncome, getSupplySum} from "./calculations";
+import {calculateDeliveryFees, getSupplyCount, getSupplyDeliveryFee, getSupplyIncome, getSupplySum} from "./calculations";
 import {useConfirm} from "primevue/useconfirm";
 import SupplyItemsDialog from "@/views/Settings/supplies/Items/SupplyItemsDialog.vue";
 
@@ -26,10 +26,10 @@ const originalSupply = supplyQuery.data;
 
 const editMode = computed(() => !!originalSupply?.value?.id);
 
-const supply = ref(<ISupply>{});
-const supplyBeforeSave = ref(<ISupply>{});
+const supply = ref(<IDetailedSupply>{});
+const supplyBeforeSave = ref(<IDetailedSupply>{});
 const fillProps = () => {
-    supply.value = <ISupply>structuredClone(toRaw(originalSupply.value ?? {}));
+    supply.value = <IDetailedSupply>structuredClone(toRaw(originalSupply.value ?? {}));
     supply.value.rows = supply.value.rows ?? [];
 }
 
@@ -50,8 +50,8 @@ const updateAvailableProducts = () => {
 }
 const ok = async (event: any) => {
     event.preventDefault();
-    supplyBeforeSave.value = structuredClone(toRaw(originalSupply.value ?? <ISupply>{}));
-    let editedSupply: ISupply;
+    supplyBeforeSave.value = structuredClone(toRaw(originalSupply.value ?? <IDetailedSupply>{}));
+    let editedSupply: IDetailedSupply;
     if (editMode.value) {
         editedSupply = await updateSupply(supply.value);
         await supplyQuery.refetch();
@@ -92,7 +92,7 @@ const setBBDate = (id: string) => {
 }
 
 const cancel = () => {
-    router.back();
+    router.push({ name: "supplies.list" });
 }
 
 const suppliersQuery = getSuppliersQuery();
@@ -108,7 +108,7 @@ const onEditSupplierClose = (id?: string) => {
 }
 
 const totalCount = computed(() => getSupplyCount(supply.value));
-const totalSum = computed(() => getSupplySum(supply.value));
+const totalSum = computed(() => getSupplySum(supply.value) + getSupplyDeliveryFee(supply.value));
 const totalIncome = computed(() => getSupplyIncome(supply.value));
 
 const currentSupplier = computed(() => suppliers.value?.find(s => s.id === supply.value?.supplierId)?.name);
@@ -132,6 +132,8 @@ const closeItemsDialog = () => {
     supplyIdForItemsDialog.value = undefined;
     cancel();
 }
+
+const delivered = computed(() => originalSupply.value?.state === SupplyState.Received);
 
 </script>
 
@@ -256,7 +258,12 @@ const closeItemsDialog = () => {
               </AccordionContent>
             </AccordionPanel>
           </Accordion>
-          <RowsTable v-if="supply.rows" :delivery-disabled="!deliveryFeeAvailable" :rows="supply.rows"></RowsTable>
+          <RowsTable 
+            v-if="supply.rows" 
+            :delivery-disabled="!deliveryFeeAvailable" 
+            :rows="supply.rows"
+            :delivered="delivered"
+          ></RowsTable>
           <div class="d-flex form-group justify-content-start">
             <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" severity="warn" @click="cancel" />
             <Button icon="fa fa-check" label="Ok" class="p-button-text" type="submit" />

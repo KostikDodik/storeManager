@@ -46,4 +46,8 @@ export class ItemApi extends Service {
     public async updateBBdate(itemIds?: string[], bbDate?: Date): Promise<void> {
         await this.post(`/items/bbdate`, { itemIds, bbDate });
     }
+    
+    public async getExpiringItems(): Promise<IItem[]> {
+        return (await this.get<IRawItem[]>("/items/expiring")).data.map(d => formatDates(d));
+    }
 }

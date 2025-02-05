@@ -31,3 +31,9 @@ export const getItemsForSupplyQuery = (supplyId: Ref<string|undefined>) => useQu
     queryFn: () => api.forSupply(<string>supplyId.value),
     enabled: () => !!supplyId.value
 })
+
+export const getExpiringItemsQuery = () => useQuery({
+    queryKey: ['items', 'expiring'],
+    staleTime: Infinity,
+    queryFn: () => api.getExpiringItems()
+});

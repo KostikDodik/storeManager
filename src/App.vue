@@ -6,6 +6,7 @@ import orderMenuItems from "./views/Settings/sales/menuItems";
 import statisticMenuItems from "./views/Settings/statistics/menuItems";
 import ConfirmDialog from "primevue/ConfirmDialog";
 import {initQueryClient} from "@/services/queryClient";
+import ExpiringItemsDialog from "@/views/Settings/supplies/Items/ExpiringItemsDialog.vue";
 
 const router = useRouter();
 
@@ -54,5 +55,6 @@ initQueryClient();
       <RouterView/>
     </div>
     <ConfirmDialog />
+    <ExpiringItemsDialog/>
   </div>
 </template>

@@ -1,32 +1,36 @@
 ﻿<script setup lang="ts">
 import {computed, onBeforeMount, ref} from "vue";
-import {ISupplyRow} from "@/types/ISupply";
+import {IDetailedRow, IDisplaySupply} from "@/types/ISupply";
 import {IProduct} from "@/types/IProduct";
 import EditProduct from "../Products/EditProduct.vue";
 import {getAllProductsQuery} from "@/services/ProductService";
+import {SupplyState} from "@/types/ISupplyState";
 
 const productsQuery = getAllProductsQuery();
 const products = productsQuery.data;
 
 const props = defineProps<{
-    deliveryDisabled: boolean
+    deliveryDisabled: boolean,
+    delivered: boolean
 }>();
 
-const rows = defineModel<ISupplyRow[]>("rows", {
+const rows = defineModel<IDetailedRow[]>("rows", {
     required: true
 });
+const inStockProvided = computed(() => props.delivered && !!rows.value?.find(r => r.inStock != null));
+
 const addRow = () => {
-    rows.value.splice(0, 0, <ISupplyRow>{});
+    rows.value.splice(0, 0, <IDetailedRow>{});
 }
 
-const deleteClick = (row: ISupplyRow) => {
+const deleteClick = (row: IDetailedRow) => {
     rows.value.splice(rows.value.indexOf(row), 1);
 }
 
 const editProductDisplay = ref(false);
 const editProduct = ref<IProduct>();
-const currentRow = ref<ISupplyRow>();
-const addProduct = (row: ISupplyRow) => {
+const currentRow = ref<IDetailedRow>();
+const addProduct = (row: IDetailedRow) => {
   currentRow.value = row;
   editProduct.value = products.value?.find(p => p.id === row.productId)
   editProductDisplay.value = true;
@@ -41,7 +45,7 @@ const onProductModalClose = (id?: string) => {
     }
 }
 
-const onProductSelected = (row: ISupplyRow) => {
+const onProductSelected = (row: IDetailedRow) => {
     if (!row.supplyPrice && row.productId) {
         const product = products.value?.find(p => p.id === row.productId);
         if (product?.buyPrice) {
@@ -54,10 +58,17 @@ const onProductSelected = (row: ISupplyRow) => {
 }
 
 const productsLoading = computed(() => productsQuery.isLoading.value);
+
+const rowClass = (data: string | IDetailedRow | undefined) => {
+    if (!inStockProvided.value || !data || typeof(data) === "string") {
+        return;
+    }
+    return [{ 'bg-success-subtle': data.inStock === 0 }];
+};
 </script>
 
 <template>
-  <div class="d-flex justify-content-center w-100" >
+  <div class="d-flex justify-content-center w-100 supply-rows-table" >
     <Card class="w-100" rounded>
       <template #header>
         <h3 class="bg-success-subtle pb-2 ps-3 pt-3">
@@ -75,6 +86,7 @@ const productsLoading = computed(() => productsQuery.isLoading.value);
             dataKey="id"
             stripedRows
             size="small"
+            :row-class="rowClass"
         >
           <template #empty> Покищо немає найменувань</template>
           <Column field="productId" header="Найменування" >
@@ -110,11 +122,12 @@ const productsLoading = computed(() => productsQuery.isLoading.value);
               <InputNumber v-model="data.supplyPrice" :minFractionDigits="2" :maxFractionDigits="2" required></InputNumber>
             </template>
           </Column>
-          <Column field="count" header="К-сть" headerStyle="width: 5rem">
+          <Column field="count" header="К-сть" headerStyle="width: 8rem">
             <template #body="{ data }">
               <InputNumber v-model="data.count" required></InputNumber>
             </template>
           </Column>
+          <Column v-if="inStockProvided" field="inStock" header="На складі" headerStyle="width: 6rem"/>
           <Column header="Загальна сума" headerStyle="width: 8rem">
             <template #body="{ data }">
               {{ Number((data.supplyPrice ?? 0) * (data.count ?? 0)).toFixed(2) }}
@@ -145,3 +158,14 @@ const productsLoading = computed(() => productsQuery.isLoading.value);
     <EditProduct :display="editProductDisplay" @close="onProductModalClose" :product="editProduct"></EditProduct>
   </div>
 </template>
+
+<style>
+.supply-rows-table {
+    .p-select {
+        background: inherit;
+    }
+    .p-inputnumber-input {
+        width: 8rem !important;
+    }
+}
+</style>

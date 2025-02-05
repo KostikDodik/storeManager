@@ -2,7 +2,7 @@
 import Paginator from "primevue/paginator"
 import {useViewModel} from "@/stores/viewModel";
 import {computed, ref, toRaw, watch} from "vue";
-import {getItemCountQuery, getItemPageQuery, getItemsForSupplyQuery} from "@/services/ItemsService";
+import {getItemCountQuery, getItemPageQuery} from "@/services/ItemsService";
 import {getAllProductsQuery} from "@/services/ProductService";
 import {getOrdersQuery} from "@/services/OrderService";
 import {getSuppliesQuery} from "@/services/SupplyService";
@@ -16,12 +16,12 @@ import {IDisplaySupply} from "@/types/ISupply";
 import {useRouter} from "vue-router";
 import {twoDigits} from "@/utilities/date";
 import BBDateDialog from "./BBDateDialog.vue";
+import {ItemState} from "@/types/IItemState";
 
 const viewModel = useViewModel();
 
-const props = defineProps<{ supplyId?: string }>();
-const supplyMode = computed(() => !!props.supplyId);
-const supplyId = computed(() => props.supplyId);
+const props = defineProps<{ items?: IItem[], itemsLoading?: boolean }>();
+const simpleMode = computed(() => !!props.items?.length)
 
 const available = computed(() => viewModel.itemListOnlyAvailable);
 const productId = computed(() => viewModel.itemListProductId);
@@ -35,11 +35,9 @@ const ordersQuery = getOrdersQuery();
 const suppliesQuery = getSuppliesQuery();
 const suppliersQuery = getSuppliersQuery();
 const salePlatformsQuery = getSalePlatformsQuery();
-const itemsForSupplyQuery = getItemsForSupplyQuery(supplyId);
 
 const count = countQuery.data;
 const rawPage = rawPageQuery.data;
-const supplyItems = itemsForSupplyQuery.data;
 const products = productsQuery.data;
 const suppliers = suppliersQuery.data;
 const salePlatforms = salePlatformsQuery.data;
@@ -50,22 +48,27 @@ interface IDisplayItem extends IItem {
     bbDateSeverity?: string;
 }
 const dayMs = 1000*60*60*24;
-const dateNow = new Date();
-const dayDiff = (dt: Date) => (dt - dateNow) / dayMs;
+const dateNow = new Date().getTime();
+const dayDiff = (dt: Date) => (dt.getTime() - dateNow) / dayMs;
 
-const currentPage = computed(() => (supplyMode.value ? supplyItems.value : rawPage.value)?.map(rp => <IDisplayItem>Object.assign(structuredClone(toRaw(rp)), <IDisplayItem>{
+const currentPage = computed(() => (props.items ?? rawPage.value)?.map(rp => <IDisplayItem>Object.assign(structuredClone(toRaw(rp)), <IDisplayItem>{
     product: products.value?.find(p => p.id === rp.productId),
     order: orders.value?.find(o => o.id === rp.orderId),
     supply: supplies.value?.find(sup => sup.id === rp.supplyId),
-    bbDateSeverity: !rp.bbDate ? "info" 
-        : dayDiff(rp.bbDate) < 62 ? "danger"
-            : dayDiff(rp.bbDate) < 123 ? "warn"
-                : "success"
+    bbDateSeverity: rp.state !== ItemState.Available 
+        ? "success" 
+        : !rp.bbDate 
+            ? "info" 
+            : dayDiff(rp.bbDate) < 62 
+                ? "danger"
+                : dayDiff(rp.bbDate) < 123 
+                    ? "warn"
+                    : "success"
 })));
 
 const loading = computed(() => countQuery.isLoading.value || rawPageQuery.isLoading.value || productsQuery.isLoading.value || ordersQuery.isLoading.value
     || suppliesQuery.isLoading.value || suppliersQuery.isLoading.value || salePlatformsQuery.isLoading.value
-    || countQuery.isFetching.value || rawPageQuery.isFetching.value
+    || countQuery.isFetching.value || rawPageQuery.isFetching.value || props.itemsLoading
 );
 
 const orders = computed(() => rawOrders.value?.map(ro => <IDisplayOrder>Object.assign(structuredClone(toRaw(ro)), {
@@ -124,6 +127,7 @@ const statusHeaderClick = () => {
 }
 
 const bbdHeaderClick = () => {
+    if (simpleMode.value) return;
     viewModel.itemListOrder = viewModel.itemListOrder === 4 ? 5 : 4;
 }
 
@@ -135,6 +139,16 @@ const onItemModalClose = () => {
 const changeBBDate = (item: IItem) => {
     editItems.value = [...new Set([...(selectedItems.value ?? []), item])];
 }
+
+const toBbd = (dt?: Date): string => {
+    if (!dt) {
+        return "";
+    }
+    const currDate = twoDigits(dt.getDate());
+    const curMonth = twoDigits(dt.getMonth() + 1); //Months are zero based
+    const currYear = dt.getFullYear();
+    return (currYear + "-" + curMonth + "-" + currDate);
+}
 </script>
 
 <template>
@@ -144,7 +158,7 @@ const changeBBDate = (item: IItem) => {
     filterDisplay="row"
     :loading="loading"
     stripedRows
-    :size="supplyMode ? 'small' : undefined"
+    :size="simpleMode ? 'small' : undefined"
     v-model:selection="selectedItems"
   >
     <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
@@ -153,7 +167,7 @@ const changeBBDate = (item: IItem) => {
       header="Найменування"
       :show-filter-menu="false"
     >
-      <template #filter v-if="!supplyMode">
+      <template #filter v-if="!simpleMode">
         <div class="d-flex justify-content-between">
           <Select
             v-model="viewModel.itemListProductId"
@@ -188,7 +202,7 @@ const changeBBDate = (item: IItem) => {
         <a @click="() => goToProduct(data)" href="#">{{ data.product?.name }}</a>
       </template>
     </Column>
-    <template v-if="!supplyMode">
+    <template v-if="!simpleMode">
       <Column field="supplyId" header="Поставка" body-style="width: 12rem;">
         <template #body="{ data } : { data: IItem }">
           <a @click="event => goToSupply(event, data)" :href="`/supplies/${data.supplyId}`">{{ data.supply?.supplier?.name }} №{{data.supply?.number}}</a>
@@ -242,11 +256,13 @@ const changeBBDate = (item: IItem) => {
       </Column>
     </template>
     <Column field="bbDate" body-style="width: 10rem">
-      <template #header v-if="!supplyMode">
+      <template #header>
         <div @click="bbdHeaderClick">
           <b>Вжити до</b>
-          <i v-show="sortOrder === 4" class="ms-1 fa fa-arrow-up-wide-short"></i>
-          <i v-show="sortOrder === 5" class="ms-1 fa fa-arrow-down-short-wide"></i>
+          <template v-if="!simpleMode">
+            <i v-show="sortOrder === 4" class="ms-1 fa fa-arrow-up-wide-short"></i>
+            <i v-show="sortOrder === 5" class="ms-1 fa fa-arrow-down-short-wide"></i>            
+          </template>
         </div>
       </template>
       <template #body="{ data } : { data: IDisplayItem }">
@@ -256,12 +272,13 @@ const changeBBDate = (item: IItem) => {
           type="button"
           @click="changeBBDate(data)"
         >
-          <span v-if="data.bbDate">{{twoDigits(data.bbDate?.getMonth() + 1)}}/{{data.bbDate?.getFullYear()}}</span>
+          <span v-if="data.state !== ItemState.Available">Продано</span>
+          <span v-else-if="data.bbDate">{{toBbd(data.bbDate)}}</span>
           <span v-else>Вказати термін</span>
         </Button>
       </template>
     </Column>
-    <template #footer v-if="!supplyMode">
+    <template #footer v-if="!simpleMode">
       <paginator
         :rows="10"
         :total-records="count"

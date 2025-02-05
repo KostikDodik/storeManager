@@ -1,31 +1,17 @@
 <script setup lang="ts">
 import {computed, ref, watch} from "vue";
 import ItemsTable from "./ItemsTable.vue";
-import {getItemsForSupplyQuery} from "@/services/ItemsService";
+import {getExpiringItemsQuery} from "@/services/ItemsService";
 
-const props = defineProps<{
-    supplyId?: string;
-}>();
+const display = ref(false);
 
-const display = ref(!!props.supplyId);
-const emit = defineEmits(["close"]);
-
-watch(() => display.value, () => {
-    if (!display.value) {
-        emit("close");
-    }
-});
-watch(() => props.supplyId, () => {
-    display.value = !!props.supplyId
-});
-
-const supplyId = computed(() => props.supplyId);
-const itemsForSupplyQuery = getItemsForSupplyQuery(supplyId);
+const itemsForSupplyQuery = getExpiringItemsQuery();
 const supplyItems = itemsForSupplyQuery.data;
 const itemsLoading = computed(() => itemsForSupplyQuery.isLoading.value || itemsForSupplyQuery.isFetching.value);
 
+watch(supplyItems, () => display.value = !!supplyItems.value?.length);
 const ok = async (event: any) => {
-    emit("close");
+    display.value = false;
 };
 </script>
 
@@ -34,7 +20,7 @@ const ok = async (event: any) => {
     v-model:visible="display"
     modal
     :style="{width: '50rem'}"
-    header="Вкажіть термін придатності"
+    :header="`Товари з критичним терміном придатності (${supplyItems?.length} од.)`"
     content-class="d-flex flex-column"
   >
     <div class="flex-grow-1 flex-shrink-1 overflow-auto">
@@ -45,4 +31,3 @@ const ok = async (event: any) => {
     </div>
   </Dialog>
 </template>
-
