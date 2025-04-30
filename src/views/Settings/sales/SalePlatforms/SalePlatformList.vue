@@ -44,7 +44,7 @@ const addSalePlatform = () => {
       </template>
       <template #content>
         <div class="d-flex justify-content-end mb-2">
-          <Button type="button" icon="fa-regular fa-plus" severity="success" @click="addSalePlatform" label="Add SalePlatform"/>
+          <Button type="button" icon="fa-regular fa-plus" outlined severity="success" @click="addSalePlatform" label="Add SalePlatform"/>
         </div>
         <DataTable 
             :value="salePlatforms" 
@@ -80,8 +80,8 @@ const addSalePlatform = () => {
           <Column headerStyle="width: 8rem" header="Дії">
             <template #body="slotProps">
               <div class="d-flex w-100 justify-content-between">
-                <Button type="button" icon="fa fa-edit" rounded severity="warn" @click="() => editClick(slotProps.data)"/>
-                <Button type="button" icon="fa-regular fa-trash-can" rounded severity="danger" @click="() => deleteClick(slotProps.data)"/>
+                <Button type="button" icon="fa fa-edit" rounded outlined severity="warn" @click="() => editClick(slotProps.data)"/>
+                <Button type="button" icon="fa-regular fa-trash-can" rounded outlined severity="danger" @click="() => deleteClick(slotProps.data)"/>
               </div>
             </template>
           </Column>

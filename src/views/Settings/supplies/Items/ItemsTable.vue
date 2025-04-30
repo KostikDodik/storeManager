@@ -184,14 +184,14 @@ const toBbd = (dt?: Date): string => {
             type="button"
             class="flex-grow-0"
             icon="fa fa-filter-circle-xmark"
-            severity="secondary"
+            outlined severity="secondary"
             style="border-radius: 0 50% 50% 0"
             @click="() => viewModel.itemListProductId = undefined"
           />
           <Button
             type="button"
             class="flex-grow-0 ms-2"
-            severity="secondary"
+            outlined severity="secondary"
             @click="changeAvailableFilter"
           >
             {{ availableFilterText }}
@@ -268,7 +268,7 @@ const toBbd = (dt?: Date): string => {
       <template #body="{ data } : { data: IDisplayItem }">
         <Button
           class="w-100 p-1 item-date-btn"
-          :severity="data.bbDateSeverity"
+          outlined :severity="data.bbDateSeverity"
           type="button"
           @click="changeBBDate(data)"
         >

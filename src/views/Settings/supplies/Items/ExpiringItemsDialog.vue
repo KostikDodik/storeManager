@@ -9,7 +9,28 @@ const itemsForSupplyQuery = getExpiringItemsQuery();
 const supplyItems = itemsForSupplyQuery.data;
 const itemsLoading = computed(() => itemsForSupplyQuery.isLoading.value || itemsForSupplyQuery.isFetching.value);
 
-watch(supplyItems, () => display.value = !!supplyItems.value?.length);
+const isMoreThanDayAgo = (dateString: string): boolean => {
+    const lastDisplayDate = new Date(dateString);
+    const currentDate = new Date();
+    const oneDayInMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    return currentDate.getTime() - lastDisplayDate.getTime() > oneDayInMs;
+};
+
+
+const LOCAL_STORAGE_KEY = 'expiringItemsLastDisplayDate';
+watch(supplyItems, () => {
+    if (supplyItems.value?.length) {
+        const lastDisplayDate = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+        // Show the dialog if there are items AND it's been more than a day since last display
+        if (!lastDisplayDate || isMoreThanDayAgo(lastDisplayDate)) {
+              display.value = !!supplyItems.value?.length;
+            localStorage.setItem(LOCAL_STORAGE_KEY, new Date().toISOString());
+        }
+    } else {
+        display.value = false;
+    }
+});
 const ok = async (event: any) => {
     display.value = false;
 };
@@ -19,7 +40,7 @@ const ok = async (event: any) => {
   <Dialog
     v-model:visible="display"
     modal
-    :style="{width: '50rem'}"
+    class="modal-lg-width"
     :header="`Товари з критичним терміном придатності (${supplyItems?.length} од.)`"
     content-class="d-flex flex-column"
   >

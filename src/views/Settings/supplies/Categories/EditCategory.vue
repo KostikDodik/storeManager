@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import {computed, onBeforeMount, onMounted, ref, watch} from "vue";
-import {ICategory, makeTreeSelectNodes} from "@/types/ICategory";
-import {addCategory, getCategoriesQuery, updateCategory} from "@/services/CategoryService";
+import { computed, onBeforeMount, ref, watch } from "vue";
+import { ICategory, makeTreeSelectNodes } from "@/types/ICategory";
+import { addCategory, getCategoriesQuery, updateCategory } from "@/services/CategoryService";
+import CommissionList from "./CommissionList.vue";
+
 const props = defineProps<{
     category?: ICategory,
     display: boolean,
@@ -10,7 +12,7 @@ const props = defineProps<{
 const categories = getCategoriesQuery().data;
 
 const category = ref<ICategory>({});
-const parentSelect = ref<{[key: string]: boolean}>({});
+const parentSelect = ref<{ [key: string]: boolean }>({});
 const parentCategories = computed(() => makeTreeSelectNodes(categories.value ?? []));
 
 const display = ref(false);
@@ -28,7 +30,7 @@ watch(() => display.value, () => {
 });
 
 const fillProps = () => {
-    category.value = <ICategory> (props.category ? { ...props.category } : {});
+    category.value = <ICategory>(props.category ? { ...props.category } : {});
     parentSelect.value = {};
     if (props.category?.parentId) {
         parentSelect.value[props.category.parentId] = true;
@@ -40,7 +42,7 @@ watch(() => props.category, fillProps);
 const cancel = () => {
     emit("close");
 };
-const ok = async (event: any) => {
+const ok = async(event: any) => {
     event.preventDefault();
     category.value.parentId = Object.keys(parentSelect.value).find(key => parentSelect.value[key]);
     let res: ICategory;
@@ -58,23 +60,44 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <Dialog v-model:visible="display" modal :style="{width: '25rem'}" :header="editMode ? 'Редагувати категорію' : 'Нова категорія'">
+  <Dialog
+    v-model:visible="display" 
+    modal
+    class="modal-lg-width"
+    :header="editMode ? 'Редагувати категорію' : 'Нова категорія'"
+  >
     <form @submit="ok">
       <div class="form-group">
         <label for="name">Назва</label>
-        <InputText id="name" v-model="category.name" required class="d-flex w-100"/>
+        <InputText id="name" v-model="category.name" required class="d-flex w-100" />
       </div>
       <div class="form-group">
         <label for="code">Код</label>
-        <InputText id="code" v-model="category.code" class="d-flex w-100"/>
+        <InputText id="code" v-model="category.code" class="d-flex w-100" />
       </div>
       <div class="form-group">
         <label for="parentId">Батьківська категорія</label>
-        <TreeSelect v-model="parentSelect" :options="parentCategories" placeholder="Виберіть батьківську категорію" class="d-flex w-100" />
+        <TreeSelect
+          v-model="parentSelect"
+          :options="parentCategories"
+          placeholder="Виберіть батьківську категорію"
+          class="d-flex w-100"
+        />
       </div>
+      <div class="form-group" v-if="category.id">
+        <Accordion class="pt-2">
+          <AccordionPanel key="settings" value="0">
+            <AccordionHeader>Налаштування комісії</AccordionHeader>
+            <AccordionContent>
+              <CommissionList :categoryId="category.id"></CommissionList>
+            </AccordionContent>
+          </AccordionPanel>
+        </Accordion>
+      </div>
+
       <div class="d-flex form-group justify-content-between">
-      <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" severity="warn" @click="cancel" />
-      <Button icon="fa fa-check" label="Ok" class="p-button-text" type="submit" />
+        <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" outlined severity="warn" @click="cancel" />
+        <Button icon="fa fa-check" label="Ok" class="p-button-text" type="submit" />
       </div>
     </form>
   </Dialog>

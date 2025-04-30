@@ -50,7 +50,12 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <Dialog v-model:visible="display" modal :style="{width: '25rem'}" :header="editMode ? 'Редагувати торгову платформу' : 'Нова торгова платформа'">
+  <Dialog 
+    v-model:visible="display" 
+    modal
+    class="modal-md-width"
+    :header="editMode ? 'Редагувати торгову платформу' : 'Нова торгова платформа'"
+  >
     <form @submit="ok">
       <div class="form-group">
         <label for="name">Ім'я</label>
@@ -61,7 +66,7 @@ onBeforeMount(() => {
         <InputText id="code" v-model="salePlatform.code" class="d-flex w-100"/>
       </div>
       <div class="d-flex form-group justify-content-between">
-        <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" severity="warn" @click="cancel" />
+        <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" outlined severity="warn" @click="cancel" />
         <Button icon="fa fa-check" label="Ok" class="p-button-text" type="submit" />
       </div>
     </form>

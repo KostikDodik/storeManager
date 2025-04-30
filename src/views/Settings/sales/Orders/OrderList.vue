@@ -84,7 +84,14 @@ const pageChanged = (event: DataTablePageEvent) => {
       </template>
       <template #content>
         <div class="d-flex justify-content-end mb-2">
-          <Button type="button" icon="fa-regular fa-plus" severity="success" @click="() => addOrder()" label="Додати замовлення"/>
+          <Button 
+              type="button" 
+              icon="fa-regular fa-plus" 
+              outlined 
+              severity="success" 
+              @click="() => addOrder()" 
+              label="Додати замовлення"
+          />
         </div>
         <DataTable
             :value="displayOrders"
@@ -104,7 +111,12 @@ const pageChanged = (event: DataTablePageEvent) => {
         >
           <template #empty> Не знайдено замовлень</template>
           <template #loading> Завантаження замовлень..</template>
-          <Column field="salePlatformId" header="Торгова платформа" :showFilterMenu="false" headerStyle="width: 15em" sortable>
+          <Column 
+              field="salePlatformId" 
+              header="Торгова платформа" 
+              :showFilterMenu="false" 
+              sortable
+          >
             <template #body="{ data }">
               <span @click="editClick(data)" style="cursor: pointer;">
                 {{ data.salePlatform?.name }}                
@@ -124,8 +136,18 @@ const pageChanged = (event: DataTablePageEvent) => {
               />
             </template>
           </Column>
-          <Column field="number" header="П/н" headerStyle="width: 4em" sortable></Column>
-          <Column field="edited" header="Остання зміна" headerStyle="width: 8em" sortable>
+          <Column
+            field="number"
+            header="П/н"
+            headerStyle="width: 6rem"
+            sortable
+          ></Column>
+          <Column
+            field="edited"
+            header="Остання зміна"
+            headerStyle="width: 16rem"
+            sortable
+          >
             <template #body="{ data }: { data: ISupply }">
               {{ data.dateEdited?.toUaTimeString() }}
             </template>
@@ -138,8 +160,14 @@ const pageChanged = (event: DataTablePageEvent) => {
               />
             </template>
           </Column>
-          <Column field="trackingNumber" header="Номер ТТН" headerStyle="width: 15em"></Column>
-          <Column field="state" header="Статус" headerStyle="width: 6rem" :showFilterMenu="false" sortable>
+          <Column field="trackingNumber" header="Номер ТТН"/>
+          <Column
+            field="state"
+            header="Статус"
+            headerStyle="width: 6rem"
+            :showFilterMenu="false"
+            sortable
+          >
             <template #body="{ data }">
               {{ data.stateName }}
             </template>
@@ -167,8 +195,23 @@ const pageChanged = (event: DataTablePageEvent) => {
           <Column headerStyle="width: 0;" header="Дії">
             <template #body="slotProps">
               <div class="d-flex w-100 justify-content-between">
-                <Button type="button" icon="fa fa-edit" rounded severity="warn" @click="() => editClick(slotProps.data)"/>
-                <Button type="button" icon="fa-regular fa-trash-can" rounded severity="danger" @click="() => deleteClick(slotProps.data)"/>
+                <Button
+                  type="button"
+                  icon="fa fa-edit"
+                  rounded
+                  outlined
+                  severity="warn"
+                  class="me-1"
+                  @click="() => editClick(slotProps.data)"
+                />
+                <Button
+                  type="button"
+                  icon="fa-regular fa-trash-can"
+                  rounded
+                  outlined
+                  severity="danger"
+                  @click="() => deleteClick(slotProps.data)"
+                />
               </div>
             </template>
           </Column>

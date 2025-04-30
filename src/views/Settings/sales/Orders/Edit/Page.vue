@@ -3,12 +3,13 @@ import {computed, onBeforeMount, ref, toRaw, watch} from "vue";
 import {IOrder} from "@/types/IOrder";
 import {useRoute, useRouter} from "vue-router";
 import RowsTable from "./RowsTable.vue";
-import EditSalePlatform from "../SalePlatforms/EditSalePlatform.vue";
+import EditSalePlatform from "../../SalePlatforms/EditSalePlatform.vue";
 import {ItemState, itemStateOptions} from "@/types/IItemState";
 import {useViewModel} from "@/stores/viewModel";
 import {addOrder, getOrderQuery, updateOrder} from "@/services/OrderService";
 import {refreshProductsById} from "@/services/ProductService";
 import {getSalePlatformsQuery} from "@/services/SalePlatformService";
+import ChecksTable from "@/views/Settings/sales/Orders/Edit/ChecksTable.vue";
 
 const props = defineProps<{
     orderId?: string
@@ -27,6 +28,7 @@ const fillProps = () => {
     order.value = structuredClone(toRaw(originalOrder.value ?? <IOrder>{}));
     order.value.state = order.value.state || ItemState.Ordered;
     order.value.rows = order.value.rows || [];
+    order.value.checks = order.value.checks || [];
 }
 
 watch(() => orderId.value, fillProps);
@@ -111,7 +113,9 @@ onBeforeMount(() => {
                     :disabled="!!order?.id || undefined"
                 />
                 <Button
-                    type="button" rounded
+                    type="button" 
+                    rounded
+                    outlined
                     icon="fa fa-plus"
                     class="flex-shrink-0"
                     v-tooltip="'Створити нову торгову платформу'"
@@ -148,9 +152,25 @@ onBeforeMount(() => {
               <InputText id="trackingNumber" v-model="order.trackingNumber" type="text" class="d-flex w-100" placeholder="Номер накладної"  />            
             </div>
           </div>
-          <RowsTable :rows="order.rows"></RowsTable>
+
+          <div class="d-flex justify-content-center w-100" >
+            <Accordion class="pt-2 w-100" rounded multiple :value="['items']">
+              <AccordionPanel value="items">
+                <AccordionHeader class="bg-success-subtle">Найменування:</AccordionHeader>
+                <AccordionContent>
+                  <RowsTable :rows="order.rows"></RowsTable>
+                </AccordionContent>
+              </AccordionPanel>
+              <AccordionPanel value="checks">
+                <AccordionHeader class="bg-success-subtle">Чеки:</AccordionHeader>
+                <AccordionContent>
+                  <ChecksTable :checks="order.checks"></ChecksTable>
+                </AccordionContent>
+              </AccordionPanel>
+            </Accordion>
+          </div>
           <div class="d-flex form-group justify-content-start">
-            <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" severity="warn" @click="cancel" />
+            <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" outlined severity="warn" @click="cancel" />
             <Button icon="fa fa-check" label="Ok" class="p-button-text" type="submit" />
           </div>
         </form>

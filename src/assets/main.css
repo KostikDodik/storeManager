@@ -13,8 +13,28 @@ div#date_panel.p-datepicker-panel.p-component {
 
 body {
     height: 100vh;
+    --p-card-body-padding: .5rem;
+    --p-panel-header-padding: .5rem;
+    @media (min-width: 1000px) {
+        --p-card-body-padding: 1.5rem;
+    }
 }
 
 .h-fit-content {
     height: fit-content;
 }
+
+.modal-lg-width {
+    width: 100%;
+    @media (min-width: 1000px) {
+        width: 60rem;
+    }
+}
+
+.modal-md-width {
+    width: 100%;
+    @media (min-width: 1000px) {
+        width: 35rem;
+    }
+}
+

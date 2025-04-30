@@ -33,7 +33,7 @@ const ok = async (event: any) => {
   <Dialog
     v-model:visible="display"
     modal
-    :style="{width: '50rem'}"
+    class="modal-lg-width"
     header="Вкажіть термін придатності"
     content-class="d-flex flex-column"
   >

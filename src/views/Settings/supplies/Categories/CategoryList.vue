@@ -61,15 +61,15 @@ const addChild = (data?: ICategory) => {
           <Column headerStyle="width: 11rem" header="Дії">
             <template #body="slotProps">
               <div class="d-flex w-100 justify-content-between">
-                <Button type="button" icon="fa fa-edit" rounded severity="warn" @click="() => editClick(slotProps.node.data)"/>
-                <Button type="button" icon="fa-regular fa-trash-can" rounded severity="danger" @click="() => deleteClick(slotProps.node.data)"/>
-                <Button type="button" icon="fa-regular fa-plus" rounded severity="success" @click="() => addChild(slotProps.node.data)"/>
+                <Button type="button" icon="fa fa-edit" rounded outlined severity="warn" @click="() => editClick(slotProps.node.data)"/>
+                <Button type="button" icon="fa-regular fa-trash-can" rounded outlined severity="danger" @click="() => deleteClick(slotProps.node.data)"/>
+                <Button type="button" icon="fa-regular fa-plus" rounded outlined severity="success" @click="() => addChild(slotProps.node.data)"/>
               </div>
             </template>
           </Column>
           <template #footer>
             <div class="d-flex justify-content-end">
-              <Button type="button" icon="fa-regular fa-plus" rounded severity="success" @click="() => addChild()"/>
+              <Button type="button" icon="fa-regular fa-plus" rounded outlined severity="success" @click="() => addChild()"/>
             </div>
           </template>
         </TreeTable>

@@ -77,7 +77,7 @@ const rowClass = (data: string | IDetailedRow | undefined) => {
       </template>
       <template #content>
         <div class="d-flex justify-content-end mb-2">
-          <Button type="button" icon="fa-regular fa-plus" severity="success" @click="() => addRow()" label="Додати найменування"/>
+          <Button type="button" icon="fa-regular fa-plus" outlined severity="success" @click="() => addRow()" label="Додати найменування"/>
         </div>
         <DataTable
             :value="rows"
@@ -110,7 +110,7 @@ const rowClass = (data: string | IDetailedRow | undefined) => {
                     type="button" rounded
                     :icon="data.productId ? 'fa fa-edit' : 'fa fa-plus'"
                     v-tooltip="data.productId ? 'Редагувати товар' : 'Створити новий товар'"
-                    :severity="data.productId ? 'warn' : 'success'"
+                    outlined :severity="data.productId ? 'warn' : 'success'"
                     class="flex-shrink-0"
                     @click="() => addProduct(data)"
                 ></Button>             
@@ -148,7 +148,7 @@ const rowClass = (data: string | IDetailedRow | undefined) => {
           <Column headerStyle="width: 4rem" header="Дії">
             <template #body="{ data }">
               <div class="d-flex w-100 justify-content-between">
-                <Button type="button" icon="fa-regular fa-trash-can" rounded severity="danger" @click="() => deleteClick(data)"/>
+                <Button type="button" icon="fa-regular fa-trash-can" rounded outlined severity="danger" @click="() => deleteClick(data)"/>
               </div>
             </template>
           </Column>

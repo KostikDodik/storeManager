@@ -1,5 +1,5 @@
 ﻿import OrderList from "./Orders/OrderList.vue";
-import Edit from "./Orders/Edit.vue";
+import Edit from "./Orders/Edit/Page.vue";
 
 const routes = [
     {

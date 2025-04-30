@@ -265,7 +265,7 @@ const delivered = computed(() => originalSupply.value?.state === SupplyState.Rec
             :delivered="delivered"
           ></RowsTable>
           <div class="d-flex form-group justify-content-start">
-            <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" severity="warn" @click="cancel" />
+            <Button icon="fa fa-cancel" label="Cancel" class="p-button-text" outlined severity="warn" @click="cancel" />
             <Button icon="fa fa-check" label="Ok" class="p-button-text" type="submit" />
           </div>
         </form>
